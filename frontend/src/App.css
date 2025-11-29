@@ -1,0 +1,52 @@
+/* Make app take full viewport height */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* full screen */
+}
+
+.header {
+  flex: 0 0 auto; /* do not grow */
+}
+
+.footer {
+  flex: 0 0 auto; /* do not grow */
+  height: 60px;
+  background-color: #343a40;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-content {
+  flex: 1 1 auto; /* take remaining space */
+  overflow-y: auto; /* scroll if content overflows */
+  padding: 20px;
+}
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-bottom: 10px;
+}
+
+.product-card .img-wrapper {
+  height: 200px; /* fixed height for all images */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa; /* optional light background */
+  overflow: hidden;
+}
+
+.product-card .product-img {
+  max-height: 100%;
+  width: auto;
+  object-fit: contain; /* keeps image ratio without stretching */
+}
