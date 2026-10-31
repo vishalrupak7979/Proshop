@@ -694,6 +694,37 @@ body {
   transform: translateY(-1px);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field .form-control {
+  padding-right: 44px;
+}
+
+/* Edge adds its own reveal button, which would sit under ours */
+.password-field .form-control::-ms-reveal {
+  display: none;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 100%;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0 var(--bs-border-radius) var(--bs-border-radius) 0;
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+}
+
 .auth-submit {
   background-image: linear-gradient(100deg, #1d4ed8, #6d28d9, #1d4ed8);
   background-size: 200% 100%;

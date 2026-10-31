@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { registerUser, clearUserError } from '../store/slices/userSlice'
 import AuthLayout from '../components/AuthLayout'
+import PasswordInput from '../components/PasswordInput'
 import { safeRedirect } from '../utils/safeRedirect'
 import { usePageTitle } from '../utils/usePageTitle'
 
@@ -50,7 +51,7 @@ const RegisterScreen = () => {
 
         <Form.Group controlId="password" className="my-3">
           <Form.Label>Password</Form.Label>
-          <Form.Control type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordInput autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </Form.Group>
 
         <Button type="submit" variant="primary" className="mt-2 w-100 auth-submit" disabled={loading}>

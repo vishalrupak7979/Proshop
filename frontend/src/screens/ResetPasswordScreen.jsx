@@ -3,6 +3,7 @@ import { Form, Button } from 'react-bootstrap'
 import { Link, useParams } from 'react-router-dom'
 import api from '../api/axios'
 import AuthLayout from '../components/AuthLayout'
+import PasswordInput from '../components/PasswordInput'
 import AuthSuccessIcon from '../components/AuthSuccessIcon'
 import { usePageTitle } from '../utils/usePageTitle'
 
@@ -51,8 +52,7 @@ const ResetPasswordScreen = () => {
       <Form onSubmit={submitHandler}>
         <Form.Group controlId="password" className="my-3">
           <Form.Label>New password</Form.Label>
-          <Form.Control
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             required
             minLength={6}
@@ -64,8 +64,7 @@ const ResetPasswordScreen = () => {
 
         <Form.Group controlId="confirm" className="my-3">
           <Form.Label>Confirm new password</Form.Label>
-          <Form.Control
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             required
             minLength={6}
