@@ -1,17 +1,27 @@
+import mongoose from 'mongoose'
 import Product from '../models/productModel.js'
 
 export const getProducts = async (req, res) => {
-  const products = await Product.find({})
-  res.json(products)
+  try {
+    const products = await Product.find({})
+    res.json(products)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
 }
 
 export const getProductById = async (req, res) => {
-  const product = await Product.findById(req.params.id)
+  try {
+    const product = mongoose.isValidObjectId(req.params.id)
+      ? await Product.findById(req.params.id)
+      : null
 
-  if (product) {
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' })
+    }
+
     res.json(product)
-  } else {
-    res.status(404)
-    throw new Error('Product not found')
+  } catch (err) {
+    res.status(500).json({ message: err.message })
   }
 }

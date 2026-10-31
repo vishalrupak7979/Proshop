@@ -3,11 +3,15 @@ import generateToken from '../utils/generateToken.js'
 
 // LOGIN
 export const authUser = async (req, res) => {
-  const { email, password } = req.body
+  try {
+    const { email, password } = req.body
 
-  const user = await User.findOne({ email })
+    const user = await User.findOne({ email })
 
-  if (user && (await user.matchPassword(password))) {
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' })
+    }
+
     res.json({
       _id: user._id,
       name: user.name,
@@ -15,28 +19,26 @@ export const authUser = async (req, res) => {
       isAdmin: user.isAdmin,
       token: generateToken(user._id)
     })
-  } else {
-    res.status(401)
-    // throw new Error('Invalid email or password')
+  } catch (err) {
+    res.status(500).json({ message: err.message })
   }
 }
 
 // REGISTER
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body
+  try {
+    const { name, email, password } = req.body
 
-  const userExists = await User.findOne({ email })
+    const userExists = await User.findOne({ email })
 
-  if (userExists) {
-    res.status(400)
-    throw new Error('User already exists')
-  }
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' })
+    }
 
-  const user = await User.create({
-    name, email, password
-  })
+    const user = await User.create({
+      name, email, password
+    })
 
-  if (user) {
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -44,8 +46,7 @@ export const registerUser = async (req, res) => {
       isAdmin: user.isAdmin,
       token: generateToken(user._id)
     })
-  } else {
-    res.status(400)
-    throw new Error('Invalid user data')
+  } catch (err) {
+    res.status(400).json({ message: err.message })
   }
 }

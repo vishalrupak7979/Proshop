@@ -13,6 +13,7 @@ import express from 'express'
 import {
   addOrderItems,
   getAllOrders,
+  getMyOrders,
   getOrderById,
   createOrderFromStripe
 } from '../controllers/orderController.js'
@@ -25,6 +26,9 @@ router.route('/').post(protect, addOrderItems)
 
 // Admin – list all orders
 router.route('/admin').get(protect, admin, getAllOrders)
+
+// Logged in user's orders (must stay above /:id)
+router.route('/mine').get(protect, getMyOrders)
 
 // Get single order
 router.route('/:id').get(protect, getOrderById)

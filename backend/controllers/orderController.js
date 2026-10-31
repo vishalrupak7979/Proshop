@@ -67,6 +67,7 @@
 // }
 
 
+import mongoose from 'mongoose'
 import Order from '../models/orderModel.js'
 
 // ------------------------------------------------------------------
@@ -158,6 +159,7 @@ export const addOrderItems = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({})
+      .sort({ createdAt: -1 })
       .populate('user', 'name email')
       .populate('orderItems.product', 'name price image')
 
@@ -169,14 +171,30 @@ export const getAllOrders = async (req, res) => {
 
 
 // ------------------------------------------------------------------
-// Get Order by ID
+// Get logged in user's orders
+// ------------------------------------------------------------------
+export const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 })
+    res.json(orders)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+
+// ------------------------------------------------------------------
+// Get Order by ID (owner or admin only)
 // ------------------------------------------------------------------
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate('user', 'name email')
+    const order = mongoose.isValidObjectId(req.params.id)
+      ? await Order.findById(req.params.id).populate('user', 'name email')
+      : null
 
-    if (!order) {
+    const isOwner = order?.user?._id.equals(req.user._id)
+
+    if (!order || !(isOwner || req.user.isAdmin)) {
       return res.status(404).json({ message: 'Order not found' })
     }
 

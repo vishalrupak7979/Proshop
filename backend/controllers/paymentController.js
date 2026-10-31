@@ -11,21 +11,23 @@ export const createCheckoutSession = async (req, res) => {
 
     const line_items = cartItems.map(item => ({
       price_data: {
-        currency: "usd",
+        currency: "inr",
         product_data: {
           name: item.name,
         },
-        unit_amount: item.price * 100, // amount in cents
+        unit_amount: Math.round(item.price * 100), // amount in paise
       },
       quantity: item.qty,
     }));
+
+    const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, "");
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-    success_url: `${process.env.FRONTEND_URL}success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
+      success_url: `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/cart`,
     });
 
     res.json({ url: session.url });
