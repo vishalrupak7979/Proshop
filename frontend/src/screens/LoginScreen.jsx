@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, clearUserError } from '../store/slices/userSlice'
-import Message from '../components/Message'
+import AuthLayout from '../components/AuthLayout'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 const LoginScreen = () => {
@@ -31,11 +31,7 @@ const LoginScreen = () => {
   }
 
   return (
-    <div className="auth-card">
-      <h1>Sign in</h1>
-
-      {error && <Message variant="danger">{error}</Message>}
-
+    <AuthLayout title="Welcome back" subtitle="Sign in to your ProShop account." error={error}>
       <Form onSubmit={submitHandler}>
         <Form.Group controlId="email" className="my-3">
           <Form.Label>Email address</Form.Label>
@@ -49,7 +45,10 @@ const LoginScreen = () => {
         </Form.Group>
 
         <Form.Group controlId="password" className="my-3">
-          <Form.Label>Password</Form.Label>
+          <div className="auth-label-row">
+            <Form.Label>Password</Form.Label>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
           <Form.Control
             type="password"
             autoComplete="current-password"
@@ -59,7 +58,7 @@ const LoginScreen = () => {
           />
         </Form.Group>
 
-        <Button type="submit" variant="primary" className="mt-2 w-100" disabled={loading}>
+        <Button type="submit" variant="primary" className="mt-2 w-100 auth-submit" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign in'}
         </Button>
       </Form>
@@ -67,7 +66,7 @@ const LoginScreen = () => {
       <p className="auth-switch">
         New customer? <Link to={`/register?redirect=${encodeURIComponent(redirect)}`}>Create an account</Link>
       </p>
-    </div>
+    </AuthLayout>
   )
 }
 

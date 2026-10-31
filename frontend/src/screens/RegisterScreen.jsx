@@ -3,7 +3,7 @@ import { Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { registerUser, clearUserError } from '../store/slices/userSlice'
-import Message from '../components/Message'
+import AuthLayout from '../components/AuthLayout'
 
 const RegisterScreen = () => {
   const [name, setName] = useState('')
@@ -32,9 +32,7 @@ const RegisterScreen = () => {
   }
 
   return (
-    <div className="auth-card">
-      <h1>Create an account</h1>
-      {error && <Message variant="danger">{error}</Message>}
+    <AuthLayout title="Create an account" subtitle="Join ProShop in less than a minute." error={error}>
       <Form onSubmit={submitHandler}>
         <Form.Group controlId="name" className="my-3">
           <Form.Label>Name</Form.Label>
@@ -51,7 +49,7 @@ const RegisterScreen = () => {
           <Form.Control type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </Form.Group>
 
-        <Button type="submit" variant="primary" className="mt-2 w-100" disabled={loading}>
+        <Button type="submit" variant="primary" className="mt-2 w-100 auth-submit" disabled={loading}>
           {loading ? 'Creating account...' : 'Create account'}
         </Button>
       </Form>
@@ -59,7 +57,7 @@ const RegisterScreen = () => {
       <p className="auth-switch">
         Have an account? <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}>Sign in</Link>
       </p>
-    </div>
+    </AuthLayout>
   )
 }
 

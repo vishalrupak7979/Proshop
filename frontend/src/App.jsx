@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Container } from 'react-bootstrap'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -10,6 +11,8 @@ import ProductScreen from './screens/ProductScreen'
 import CartScreen from './screens/CartScreen'
 import LoginScreen from './screens/LoginScreen'
 import RegisterScreen from './screens/RegisterScreen'
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen'
+import ResetPasswordScreen from './screens/ResetPasswordScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import OrderScreen from './screens/OrderScreen'
 import PaymentSuccessScreen from './screens/PaymentSuccessScreen'
@@ -25,10 +28,15 @@ const NotFound = () => (
 
 function App() {
   const { pathname } = useLocation()
+  const theme = useSelector((state) => state.theme.mode)
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-bs-theme', theme)
+  }, [theme])
 
   return (
     <div className="app-container">
@@ -42,6 +50,8 @@ function App() {
             <Route path="/cart" element={<CartScreen />} />
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/register" element={<RegisterScreen />} />
+            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordScreen />} />
             <Route path="/success" element={<ProtectedRoute><PaymentSuccessScreen /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
             <Route path="/order/:id" element={<ProtectedRoute><OrderScreen /></ProtectedRoute>} />
@@ -52,7 +62,7 @@ function App() {
       </main>
 
       <Footer />
-      <ToastContainer position="bottom-right" autoClose={2500} hideProgressBar />
+      <ToastContainer position="bottom-right" autoClose={2500} hideProgressBar theme={theme} />
     </div>
   )
 }

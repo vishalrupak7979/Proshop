@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { FaShoppingCart, FaUser } from 'react-icons/fa'
 import { logout } from '../store/slices/userSlice'
+import ThemeToggle from './ThemeToggle'
 
 const Header = () => {
   const dispatch = useDispatch()
@@ -27,7 +28,10 @@ const Header = () => {
             <Navbar.Brand>ProShop</Navbar.Brand>
           </LinkContainer>
 
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <div className="header-actions">
+            <ThemeToggle />
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          </div>
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-md-center">
               <LinkContainer to="/cart">
