@@ -1,39 +1,27 @@
-// import express from 'express'
-// import { addOrderItems } from '../controllers/orderController.js'
-// import { protect } from '../middleware/authMiddleware.js'
-
-// const router = express.Router()
-
-// router.post('/', protect, addOrderItems)
-
-// export default router
-
-
 import express from 'express'
 import {
-  addOrderItems,
+  createOrderFromStripe,
   getAllOrders,
   getMyOrders,
   getOrderById,
-  createOrderFromStripe
+  markOrderDelivered,
 } from '../controllers/orderController.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-// Create order
-router.route('/').post(protect, addOrderItems)
+// Save an order once Stripe confirms payment
+router.post('/stripe-success', protect, createOrderFromStripe)
 
-// Admin – list all orders
+// Admin: list all orders
 router.route('/admin').get(protect, admin, getAllOrders)
 
 // Logged in user's orders (must stay above /:id)
 router.route('/mine').get(protect, getMyOrders)
 
-// Get single order
 router.route('/:id').get(protect, getOrderById)
 
+// Admin: mark delivered
+router.route('/:id/deliver').put(protect, admin, markOrderDelivered)
 
-// When Stripe payment succeeds
-router.post('/stripe-success', protect, createOrderFromStripe)
 export default router

@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import colors from 'colors'
 import cors from 'cors'
+import helmet from 'helmet'
 import connectDB from './config/db.js'
 import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -20,11 +21,16 @@ connectDB()
 // Initialize app
 const app = express()
 
+// Render sits in front of the app, so rate limits need the real client IP
+app.set('trust proxy', 1)
+
+// Product images are loaded from the frontend's domain
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
+
 // Enable CORS
 app.use(cors({
-  origin: '*',     // or "http://localhost:5173"
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
 }))
 
 // Parse JSON body

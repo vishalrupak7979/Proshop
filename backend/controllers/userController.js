@@ -13,7 +13,11 @@ export const authUser = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const user = await User.findOne({ email })
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(401).json({ message: 'Invalid email or password' })
+    }
+
+    const user = await User.findOne({ email: email.trim() })
 
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' })
@@ -36,14 +40,21 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body
 
-    const userExists = await User.findOne({ email })
+    if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Name and email are required' })
+    }
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' })
+    }
+
+    const userExists = await User.findOne({ email: email.trim() })
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' })
     }
 
     const user = await User.create({
-      name, email, password
+      name: name.trim(), email: email.trim(), password
     })
 
     res.status(201).json({
@@ -118,6 +129,8 @@ export const resetPassword = async (req, res) => {
     }
 
     user.password = password
+    // A token issued in this same second has a rounded-down iat, so leave a margin
+    user.passwordChangedAt = new Date(Date.now() - 1000)
     user.resetPasswordToken = undefined
     user.resetPasswordExpires = undefined
     await user.save()

@@ -9,8 +9,10 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, no token' })
   }
 
+  let decoded
+
   try {
-    const decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET)
+    decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET)
     req.user = await User.findById(decoded.id).select('-password')
   } catch (error) {
     return res.status(401).json({ message: 'Not authorized, token failed' })
@@ -18,6 +20,11 @@ export const protect = async (req, res, next) => {
 
   if (!req.user) {
     return res.status(401).json({ message: 'Not authorized, user not found' })
+  }
+
+  // A password reset signs out every session started before it
+  if (req.user.passwordChangedAt && decoded.iat * 1000 < req.user.passwordChangedAt.getTime()) {
+    return res.status(401).json({ message: 'Not authorized, please sign in again' })
   }
 
   next()

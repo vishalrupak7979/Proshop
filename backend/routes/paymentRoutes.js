@@ -1,20 +1,9 @@
-// import express from "express";
-// import { createOrder, verifyPayment } from "../controllers/paymentController.js";
+import express from 'express'
+import { createCheckoutSession } from '../controllers/paymentController.js'
+import { protect } from '../middleware/authMiddleware.js'
 
-// const router = express.Router();
+const router = express.Router()
 
-// router.post("/create-order", createOrder);
-// router.post("/verify-payment", verifyPayment);
+router.post('/create-checkout-session', protect, createCheckoutSession)
 
-// export default router;
-
-
-import express from "express";
-import { createCheckoutSession ,getStripeSession } from "../controllers/paymentController.js";
-
-const router = express.Router();
-
-router.post("/create-checkout-session", createCheckoutSession);
-
-router.get("/session/:id", getStripeSession);
-export default router;
+export default router
