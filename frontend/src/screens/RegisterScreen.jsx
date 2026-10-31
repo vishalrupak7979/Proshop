@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { registerUser, clearUserError } from '../store/slices/userSlice'
 import AuthLayout from '../components/AuthLayout'
+import { safeRedirect } from '../utils/safeRedirect'
+import { usePageTitle } from '../utils/usePageTitle'
 
 const RegisterScreen = () => {
   const [name, setName] = useState('')
@@ -14,7 +16,9 @@ const RegisterScreen = () => {
   const location = useLocation()
 
   const { userInfo, loading, error } = useSelector((state) => state.user)
-  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
+  const redirect = safeRedirect(new URLSearchParams(location.search).get('redirect'))
+
+  usePageTitle('Create an account')
 
   useEffect(() => {
     dispatch(clearUserError())

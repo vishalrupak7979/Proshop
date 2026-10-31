@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, clearUserError } from '../store/slices/userSlice'
 import AuthLayout from '../components/AuthLayout'
+import { safeRedirect } from '../utils/safeRedirect'
+import { usePageTitle } from '../utils/usePageTitle'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 const LoginScreen = () => {
@@ -13,7 +15,9 @@ const LoginScreen = () => {
 
   const { userInfo, loading, error } = useSelector((state) => state.user)
   const [searchParams] = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = safeRedirect(searchParams.get('redirect'))
+
+  usePageTitle('Sign in')
 
   useEffect(() => {
     dispatch(clearUserError())

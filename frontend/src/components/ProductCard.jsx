@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,6 +6,7 @@ import Rating from "./Rating";
 import { addToCart } from "../store/slices/cartSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
+import { maxQty } from "../utils/quantity";
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
@@ -18,9 +18,9 @@ const ProductCard = ({ product }) => {
   const lowStock = !outOfStock && product.countInStock <= 3;
 
   const addToCartHandler = () => {
-    const qty = Math.min((inCart?.qty || 0) + 1, product.countInStock);
+    const qty = Math.min((inCart?.qty || 0) + 1, maxQty(product.countInStock));
     dispatch(addToCart({ ...product, qty }));
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} added to cart`, { toastId: product._id });
   };
 
   return (

@@ -1,10 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import ProductCard from '../components/ProductCard'
-import Loader from '../components/Loader'
+import ProductSkeleton from '../components/ProductSkeleton'
 import Message from '../components/Message'
 import { fetchProducts } from '../store/slices/productSlice'
+import { usePageTitle } from '../utils/usePageTitle'
+
+const SLOW_LOAD_MS = 5000
 
 const SORTERS = {
   featured: () => 0,
@@ -19,10 +22,19 @@ const HomeScreen = () => {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [sort, setSort] = useState('featured')
+  const [slowLoad, setSlowLoad] = useState(false)
+
+  usePageTitle()
 
   useEffect(() => {
     dispatch(fetchProducts())
   }, [dispatch])
+
+  // Render's free tier sleeps, and the first request can take close to a minute
+  useEffect(() => {
+    const timer = setTimeout(() => setSlowLoad(true), SLOW_LOAD_MS)
+    return () => clearTimeout(timer)
+  }, [])
 
   const categories = useMemo(
     () => ['All', ...new Set(products.map((p) => p.category))],
@@ -79,8 +91,17 @@ const HomeScreen = () => {
         ))}
       </div>
 
-      {loading ? (
-        <Loader />
+      {loading && products.length === 0 ? (
+        <>
+          {slowLoad && <p className="slow-note">The store is waking up. This can take up to a minute.</p>}
+          <Row className="g-4">
+            {[...Array(8).keys()].map((x) => (
+              <Col key={x} xs={6} md={4} xl={3}>
+                <ProductSkeleton />
+              </Col>
+            ))}
+          </Row>
+        </>
       ) : error ? (
         <Message variant="danger">{error}</Message>
       ) : visibleProducts.length === 0 ? (

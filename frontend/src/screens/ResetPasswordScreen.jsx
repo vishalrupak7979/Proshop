@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import api from '../api/axios'
 import AuthLayout from '../components/AuthLayout'
 import AuthSuccessIcon from '../components/AuthSuccessIcon'
+import { usePageTitle } from '../utils/usePageTitle'
 
 const ResetPasswordScreen = () => {
   const { token } = useParams()
@@ -12,6 +13,8 @@ const ResetPasswordScreen = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+
+  usePageTitle('Reset password')
 
   const submitHandler = async (e) => {
     e.preventDefault()

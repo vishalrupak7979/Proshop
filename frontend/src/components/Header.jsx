@@ -1,4 +1,3 @@
-import React from 'react'
 import { Navbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap'
 import { LinkContainer } from 'react-router-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'

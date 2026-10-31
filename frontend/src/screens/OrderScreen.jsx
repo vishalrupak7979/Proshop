@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Row, Col, Card, Badge, Image } from "react-bootstrap";
@@ -7,11 +7,14 @@ import Message from "../components/Message";
 import { getOrderById } from "../store/slices/orderSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
+import { usePageTitle } from "../utils/usePageTitle";
 
 const OrderScreen = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { order, loading, error } = useSelector((state) => state.orders);
+
+  usePageTitle("Order details");
 
   useEffect(() => {
     dispatch(getOrderById(id));
@@ -54,8 +57,8 @@ const OrderScreen = () => {
                 {order.isDelivered ? <Badge bg="success">Delivered</Badge> : <Badge bg="warning" text="dark">On the way</Badge>}
               </div>
               <div className="summary-row">
-                <span>Payment method</span>
-                <span>{order.paymentMethod}</span>
+                <span>Payment</span>
+                {order.isPaid ? <Badge bg="success">Paid by {order.paymentMethod}</Badge> : <Badge bg="danger">Unpaid</Badge>}
               </div>
               <div className="summary-row summary-total">
                 <span>Total</span>

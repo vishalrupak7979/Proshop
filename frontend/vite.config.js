@@ -1,15 +1,17 @@
-
-
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist'
+    rollupOptions: {
+      output: {
+        // Libraries change rarely, so returning visitors keep them cached across deploys
+        manualChunks: (id) => (id.includes('node_modules') ? 'vendor' : undefined)
+      }
+    }
   },
   server: {
-    historyApiFallback: true
+    port: 5173
   }
 })

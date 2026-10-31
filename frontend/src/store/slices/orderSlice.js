@@ -1,31 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../api/axios";
+import { logout } from "./userSlice";
 
-// CREATE ORDER
-export const createOrder = createAsyncThunk(
-  "orders/createOrder",
-  async (orderData, { rejectWithValue }) => {
+// SAVE ORDER AFTER STRIPE PAYMENT
+export const confirmStripeOrder = createAsyncThunk(
+  "orders/confirmStripeOrder",
+  async (sessionId, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post("/orders", orderData);
+      const { data } = await axios.post("/orders/stripe-success", { sessionId });
       return data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to create order"
-      );
-    }
-  }
-);
-
-// GET ALL ORDERS (ADMIN)
-export const getAllOrders = createAsyncThunk(
-  "orders/getAllOrders",
-  async (_, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.get("/orders/admin");
-      return data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to load orders"
+        error.response?.data?.message || "Failed to confirm your order"
       );
     }
   }
@@ -61,47 +47,22 @@ export const getOrderById = createAsyncThunk(
   }
 );
 
+const initialState = {
+  order: null,
+  orders: [],
+  loading: true,
+  error: null,
+};
+
 const orderSlice = createSlice({
   name: "orders",
-  initialState: {
-    order: null,
-    orders: [],
-    loading: false,
-    error: null,
-  },
-  reducers: {
-    resetOrder(state) {
-      state.order = null;
-    },
-  },
+  initialState,
+  reducers: {},
 
   extraReducers: (builder) => {
     builder
-      // CREATE ORDER
-      .addCase(createOrder.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(createOrder.fulfilled, (state, action) => {
-        state.loading = false;
-        state.order = action.payload;
-      })
-      .addCase(createOrder.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // ADMIN LIST ORDERS
-      .addCase(getAllOrders.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getAllOrders.fulfilled, (state, action) => {
-        state.loading = false;
-        state.orders = action.payload;
-      })
-      .addCase(getAllOrders.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      // Never show one customer's orders to the next person on this device
+      .addCase(logout, () => initialState)
 
       // MY ORDERS
       .addCase(getMyOrders.pending, (state) => {
@@ -133,5 +94,4 @@ const orderSlice = createSlice({
   },
 });
 
-export const { resetOrder } = orderSlice.actions;
 export default orderSlice.reducer;

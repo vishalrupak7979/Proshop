@@ -21,6 +21,18 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// An expired session should lead to sign in, not a broken page
+api.interceptors.response.use(undefined, (error) => {
+  const isAuthRoute = error.config?.url?.startsWith('/users')
+  const onSignIn = window.location.pathname === '/login'
+
+  if (error.response?.status === 401 && !isAuthRoute && !onSignIn) {
+    localStorage.removeItem('userInfo')
+    window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+  }
+  return Promise.reject(error)
+})
+
 export default api
 
 

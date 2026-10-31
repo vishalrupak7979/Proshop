@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { readJSON } from '../../utils/storage'
 
 const initialState = {
-  cartItems: JSON.parse(localStorage.getItem('cartItems') || '[]'),
-  shippingAddress: JSON.parse(localStorage.getItem('shippingAddress') || 'null'),
+  cartItems: readJSON('cartItems', []),
+  shippingAddress: readJSON('shippingAddress', null),
   paymentMethod: localStorage.getItem('paymentMethod') || ''
 }
 

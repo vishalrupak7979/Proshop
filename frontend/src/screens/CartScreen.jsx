@@ -1,4 +1,3 @@
-import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Row, Col, Image, Button, Form, Card } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
@@ -8,6 +7,8 @@ import { removeFromCart, addToCart } from "../store/slices/cartSlice";
 import { createCheckoutSessionThunk } from "../store/slices/paymentSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
+import { qtyOptions } from "../utils/quantity";
+import { usePageTitle } from "../utils/usePageTitle";
 
 const CartScreen = () => {
   const dispatch = useDispatch();
@@ -15,6 +16,8 @@ const CartScreen = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const { loading } = useSelector((state) => state.payment);
   const { userInfo } = useSelector((state) => state.user);
+
+  usePageTitle("Cart");
 
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const totalPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
@@ -39,7 +42,7 @@ const CartScreen = () => {
     if (result.meta.requestStatus === "fulfilled") {
       window.location.href = result.payload.url;
     } else {
-      toast.error(`Payment failed: ${result.payload}`);
+      toast.error(result.payload);
     }
   };
 
@@ -73,8 +76,8 @@ const CartScreen = () => {
                 value={item.qty}
                 onChange={(e) => qtyChangeHandler(item, Number(e.target.value))}
               >
-                {[...Array(item.countInStock).keys()].map((x) => (
-                  <option key={x + 1} value={x + 1}>{x + 1}</option>
+                {qtyOptions(item.countInStock).map((x) => (
+                  <option key={x} value={x}>{x}</option>
                 ))}
               </Form.Select>
               <Button

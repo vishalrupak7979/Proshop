@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import api from '../../api/axios'
+import { readJSON } from '../../utils/storage'
 
 export const loginUser = createAsyncThunk(
   'user/login',
@@ -28,7 +29,7 @@ export const registerUser = createAsyncThunk('user/register', async ({ name, ema
 })
 
 const initialState = {
-  userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null'),
+  userInfo: readJSON('userInfo', null),
   loading: false,
   error: null
 }

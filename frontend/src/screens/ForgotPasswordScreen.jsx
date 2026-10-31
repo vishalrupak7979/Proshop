@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import AuthLayout from '../components/AuthLayout'
 import AuthSuccessIcon from '../components/AuthSuccessIcon'
+import { usePageTitle } from '../utils/usePageTitle'
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+
+  usePageTitle('Forgot password')
 
   const submitHandler = async (e) => {
     e.preventDefault()

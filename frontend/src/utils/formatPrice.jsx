@@ -1,3 +1,8 @@
 export const formatPrice = (num) => {
-  return Number(num).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
+  const value = Number(num)
+  return value.toLocaleString('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  })
 }

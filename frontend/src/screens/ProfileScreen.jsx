@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Badge, Table } from "react-bootstrap";
@@ -6,11 +6,14 @@ import Loader from "../components/Loader";
 import Message from "../components/Message";
 import { getMyOrders } from "../store/slices/orderSlice";
 import { formatPrice } from "../utils/formatPrice";
+import { usePageTitle } from "../utils/usePageTitle";
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.user);
   const { orders, loading, error } = useSelector((state) => state.orders);
+
+  usePageTitle("My account");
 
   useEffect(() => {
     dispatch(getMyOrders());

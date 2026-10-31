@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Row, Col, Image, Card, Button, Form, Badge } from 'react-bootstrap'
@@ -10,6 +10,8 @@ import { fetchProductById } from '../store/slices/productSlice'
 import { addToCart } from '../store/slices/cartSlice'
 import { formatPrice } from '../utils/formatPrice'
 import { imageUrl } from '../utils/imageUrl'
+import { qtyOptions } from '../utils/quantity'
+import { usePageTitle } from '../utils/usePageTitle'
 
 const ProductScreen = () => {
   const { id } = useParams()
@@ -29,6 +31,8 @@ const ProductScreen = () => {
 
   // The store keeps the last viewed product, so don't flash it here
   const current = product?._id === id ? product : null
+
+  usePageTitle(current?.name)
 
   return (
     <>
@@ -74,8 +78,8 @@ const ProductScreen = () => {
                         value={qty}
                         onChange={(e) => setQty(Number(e.target.value))}
                       >
-                        {[...Array(current.countInStock).keys()].map((x) => (
-                          <option key={x + 1} value={x + 1}>{x + 1}</option>
+                        {qtyOptions(current.countInStock).map((x) => (
+                          <option key={x} value={x}>{x}</option>
                         ))}
                       </Form.Select>
                     </div>
