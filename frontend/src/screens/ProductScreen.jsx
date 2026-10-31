@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Row, Col, Image, ListGroup, Card, Button, Form } from 'react-bootstrap'
+import { Row, Col, Image, Card, Button, Form, Badge } from 'react-bootstrap'
+import { FaArrowLeft } from 'react-icons/fa'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
+import Rating from '../components/Rating'
 import { fetchProductById } from '../store/slices/productSlice'
 import { addToCart } from '../store/slices/cartSlice'
+import { formatPrice } from '../utils/formatPrice'
+import { imageUrl } from '../utils/imageUrl'
 
 const ProductScreen = () => {
   const { id } = useParams()
@@ -23,75 +27,86 @@ const ProductScreen = () => {
     navigate('/cart')
   }
 
+  // The store keeps the last viewed product, so don't flash it here
+  const current = product?._id === id ? product : null
+
   return (
     <>
-      <Button className="btn btn-light my-3" onClick={() => navigate(-1)}>
-        Go Back
-      </Button>
+      <Link to="/" className="back-link"><FaArrowLeft aria-hidden="true" /> Back to shop</Link>
 
-      {loading ? (
-        <Loader />
-      ) : error ? (
+      {error ? (
         <Message variant="danger">{error}</Message>
-      ) : product ? (
-        <Row>
-          <Col md={6}>
-          
-            <Image  src={`${import.meta.env.VITE_API_URL}${product.image}`}  alt={product.name} fluid />
-          </Col>
+      ) : loading || !current ? (
+        <Loader />
+      ) : (
+        <>
+          <Row className="g-4">
+            <Col md={6}>
+              <div className="product-hero-img">
+                <Image src={imageUrl(current.image)} alt={current.name} fluid />
+              </div>
+            </Col>
 
-          <Col md={3}>
-            <ListGroup variant="flush">
-              <ListGroup.Item><h3>{product.name}</h3></ListGroup.Item>
-              <ListGroup.Item>Price: ₹{product.price}</ListGroup.Item>
-              <ListGroup.Item>Description: {product.description}</ListGroup.Item>
-            </ListGroup>
-          </Col>
+            <Col md={6}>
+              <div className="product-brand">{current.brand} · {current.category}</div>
+              <h1 className="product-name">{current.name}</h1>
+              <Rating value={current.rating} text={`${current.rating} (${current.numReviews} reviews)`} />
+              <div className="product-price product-price-lg">{formatPrice(current.price)}</div>
+              <p className="product-description">{current.description}</p>
 
-          <Col md={3}>
-            <Card>
-              <ListGroup variant="flush">
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Price:</Col>
-                    <Col><strong>₹{product.price}</strong></Col>
-                  </Row>
-                </ListGroup.Item>
+              <Card className="buy-box">
+                <Card.Body>
+                  <div className="summary-row">
+                    <span>Status</span>
+                    {current.countInStock > 0 ? (
+                      <Badge bg="success">In stock</Badge>
+                    ) : (
+                      <Badge bg="secondary">Out of stock</Badge>
+                    )}
+                  </div>
 
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Status:</Col>
-                    <Col>{product.countInStock > 0 ? 'In Stock' : 'Out Of Stock'}</Col>
-                  </Row>
-                </ListGroup.Item>
+                  {current.countInStock > 0 && (
+                    <div className="summary-row">
+                      <label htmlFor="qty">Quantity</label>
+                      <Form.Select
+                        id="qty"
+                        className="qty-select"
+                        value={qty}
+                        onChange={(e) => setQty(Number(e.target.value))}
+                      >
+                        {[...Array(current.countInStock).keys()].map((x) => (
+                          <option key={x + 1} value={x + 1}>{x + 1}</option>
+                        ))}
+                      </Form.Select>
+                    </div>
+                  )}
 
-                {product.countInStock > 0 && (
-                  <ListGroup.Item>
-                    <Row>
-                      <Col>Qty</Col>
-                      <Col>
-                        <Form.Select value={qty} onChange={(e) => setQty(Number(e.target.value))}>
-                          {[...Array(product.countInStock).keys()].map((x) => (
-                            <option key={x + 1} value={x + 1}>{x + 1}</option>
-                          ))}
-                        </Form.Select>
-                      </Col>
-                    </Row>
-                  </ListGroup.Item>
-                )}
-
-                <ListGroup.Item>
-                  <div className="d-grid">
-                    <Button onClick={addToCartHandler} disabled={product.countInStock === 0} type="button">
-                      Add To Cart
+                  <div className="d-grid mt-3">
+                    <Button onClick={addToCartHandler} disabled={current.countInStock === 0} type="button">
+                      Add to cart
                     </Button>
                   </div>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card>
-          </Col>
-        </Row>
-      ) : null}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <section className="reviews">
+            <h2>Customer reviews</h2>
+            {current.reviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              current.reviews.map((review) => (
+                <div key={review._id} className="review">
+                  <strong>{review.name}</strong>
+                  <Rating value={review.rating} />
+                  <p>{review.comment}</p>
+                </div>
+              ))
+            )}
+          </section>
+        </>
+      )}
     </>
   )
 }

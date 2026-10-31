@@ -1,20 +1,27 @@
 import React from 'react'
-import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap'
+import { Navbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap'
 import { LinkContainer } from 'react-router-bootstrap'
 import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { FaShoppingCart, FaUser } from 'react-icons/fa'
 import { logout } from '../store/slices/userSlice'
 
 const Header = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const userInfo = useSelector((state) => state.user.userInfo)
+  const cartCount = useSelector((state) =>
+    state.cart.cartItems.reduce((acc, item) => acc + item.qty, 0)
+  )
 
   const handleLogout = () => {
     dispatch(logout())
+    navigate('/')
   }
 
   return (
-    <header>
-      <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
+    <header className="site-header">
+      <Navbar expand="md" collapseOnSelect>
         <Container>
           <LinkContainer to="/">
             <Navbar.Brand>ProShop</Navbar.Brand>
@@ -22,44 +29,30 @@ const Header = () => {
 
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
+            <Nav className="ms-auto align-items-md-center">
               <LinkContainer to="/cart">
-                <Nav.Link><i className="fas fa-shopping-cart" /> Cart</Nav.Link>
+                <Nav.Link>
+                  <FaShoppingCart aria-hidden="true" /> Cart
+                  {cartCount > 0 && <Badge bg="primary" pill className="ms-2">{cartCount}</Badge>}
+                </Nav.Link>
               </LinkContainer>
 
+              {userInfo?.isAdmin && (
+                <LinkContainer to="/admin/orders">
+                  <Nav.Link>All orders</Nav.Link>
+                </LinkContainer>
+              )}
+
               {userInfo ? (
-                <>
-                  {/* USER DROPDOWN */}
-                  <NavDropdown title={userInfo.name} id="username">
-                    <LinkContainer to="/profile">
-                      <NavDropdown.Item>Profile</NavDropdown.Item>
-                    </LinkContainer>
-
-                    <NavDropdown.Item onClick={handleLogout}>
-                      Logout
-                    </NavDropdown.Item>
-                  </NavDropdown>
-
-                  {/* ADMIN DROPDOWN (ONLY IF isAdmin = true) */}
-                  {userInfo.isAdmin && (
-                    <NavDropdown title="Admin" id="adminmenu">
-                      <LinkContainer to="/admin/userlist">
-                        <NavDropdown.Item>Users</NavDropdown.Item>
-                      </LinkContainer>
-
-                      <LinkContainer to="/admin/productlist">
-                        <NavDropdown.Item>Products</NavDropdown.Item>
-                      </LinkContainer>
-
-                      <LinkContainer to="/admin/orders">
-                        <NavDropdown.Item>Orders</NavDropdown.Item>
-                      </LinkContainer>
-                    </NavDropdown>
-                  )}
-                </>
+                <NavDropdown title={userInfo.name} id="username" align="end">
+                  <LinkContainer to="/profile">
+                    <NavDropdown.Item>My account</NavDropdown.Item>
+                  </LinkContainer>
+                  <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                </NavDropdown>
               ) : (
                 <LinkContainer to="/login">
-                  <Nav.Link><i className="fas fa-user" /> Sign In</Nav.Link>
+                  <Nav.Link><FaUser aria-hidden="true" /> Sign In</Nav.Link>
                 </LinkContainer>
               )}
             </Nav>

@@ -1,13 +1,12 @@
 import React from 'react'
-import { Container, Row, Col } from 'react-bootstrap'
+import { Container } from 'react-bootstrap'
 
 const Footer = () => {
   return (
-    <footer>
-      <Container>
-        <Row>
-          <Col className="text-center py-3">Copyright &copy; ProShop</Col>
-        </Row>
+    <footer className="site-footer">
+      <Container className="site-footer-inner">
+        <span>&copy; {new Date().getFullYear()} ProShop</span>
+        <span>Secure payments by Stripe</span>
       </Container>
     </footer>
   )

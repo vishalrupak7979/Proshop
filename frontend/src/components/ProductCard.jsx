@@ -1,73 +1,59 @@
-
-// import React from 'react'
-// import { Card } from 'react-bootstrap'
-// import { Link } from 'react-router-dom'
-
-// const ProductCard = ({ product }) => {
-//   return (
-//     <Card className="my-3 p-3 rounded">
-//       <Link to={`/product/${product._id}`}>
-//         <Card.Img 
-//           src={`${import.meta.env.VITE_API_URL}${product.image}`} 
-//           variant="top" 
-//         />
-//       </Link>
-
-//       <Card.Body>
-//         <Link to={`/product/${product._id}`}>
-//           <Card.Title as="div"><strong>{product.name}</strong></Card.Title>
-//         </Link>
-
-//         <Card.Text as="h3">₹{product.price}</Card.Text>
-//       </Card.Body>
-//     </Card>
-//   )
-// }
-
-// export default ProductCard
-
-
 import React from "react";
-import { Card, Button } from "react-bootstrap";
+import { Card, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import Rating from "./Rating";
+import { addToCart } from "../store/slices/cartSlice";
+import { formatPrice } from "../utils/formatPrice";
+import { imageUrl } from "../utils/imageUrl";
 
 const ProductCard = ({ product }) => {
+  const dispatch = useDispatch();
+  const inCart = useSelector((state) =>
+    state.cart.cartItems.find((item) => item._id === product._id)
+  );
+
+  const outOfStock = product.countInStock === 0;
+  const lowStock = !outOfStock && product.countInStock <= 3;
+
+  const addToCartHandler = () => {
+    const qty = Math.min((inCart?.qty || 0) + 1, product.countInStock);
+    dispatch(addToCart({ ...product, qty }));
+    toast.success(`${product.name} added to cart`);
+  };
+
   return (
-    <Card className="my-3 p-3 rounded product-card " style={{marginTop:'10px'}}>
-      <Link to={`/product/${product._id}`}>
-        <div className="img-wrapper">
-          <Card.Img
-              src={`${import.meta.env.VITE_API_URL}${product.image}`} 
-            variant="top"
-            className="product-img"
-          />
-        </div>
+    <Card className="product-card">
+      <Link to={`/product/${product._id}`} className="img-wrapper">
+        <Card.Img
+          src={imageUrl(product.image)}
+          alt={product.name}
+          className="product-img"
+          loading="lazy"
+        />
+        {outOfStock && <Badge bg="secondary" className="stock-badge">Out of stock</Badge>}
+        {lowStock && <Badge bg="warning" text="dark" className="stock-badge">Only {product.countInStock} left</Badge>}
       </Link>
 
       <Card.Body className="d-flex flex-column">
-        <Link to={`/product/${product._id}`} className="text-decoration-none">
-          <Card.Title as="h5" className="text-dark product-title">
-            {product.name}
-          </Card.Title>
+        <div className="product-brand">{product.brand}</div>
+        <Link to={`/product/${product._id}`} className="product-title">
+          {product.name}
         </Link>
 
-        <Rating value={product.rating} />
+        <Rating value={product.rating} text={`(${product.numReviews})`} />
 
-        <h4 className="mt-2 mb-3">₹{product.price}</h4>
+        <div className="product-price">{formatPrice(product.price)}</div>
 
-        <div className="mt-auto d-flex gap-2">
-          
-
-          <Button
-            variant="success"
-            className="w-100"
-            as={Link}
-            to={`/product/${product._id}`}
-          >
-            Buy Now
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          className="mt-auto w-100"
+          disabled={outOfStock}
+          onClick={addToCartHandler}
+        >
+          {outOfStock ? "Unavailable" : "Add to cart"}
+        </Button>
       </Card.Body>
     </Card>
   );

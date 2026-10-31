@@ -21,11 +21,26 @@ export const getAllOrders = createAsyncThunk(
   "orders/getAllOrders",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get("/api/orders/admin");
+      const { data } = await axios.get("/orders/admin");
       return data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to load orders"
+      );
+    }
+  }
+);
+
+// GET LOGGED IN USER'S ORDERS
+export const getMyOrders = createAsyncThunk(
+  "orders/getMyOrders",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get("/orders/mine");
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to load your orders"
       );
     }
   }
@@ -36,7 +51,7 @@ export const getOrderById = createAsyncThunk(
   "orders/getOrderById",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`/api/orders/${id}`);
+      const { data } = await axios.get(`/orders/${id}`);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -88,9 +103,24 @@ const orderSlice = createSlice({
         state.error = action.payload;
       })
 
+      // MY ORDERS
+      .addCase(getMyOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMyOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = action.payload;
+      })
+      .addCase(getMyOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       // GET ORDER BY ID
       .addCase(getOrderById.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(getOrderById.fulfilled, (state, action) => {
         state.loading = false;

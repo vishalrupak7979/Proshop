@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Badge, Table } from "react-bootstrap";
 import axios from "../api/axios";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import { formatPrice } from "../utils/formatPrice";
 
 const AdminOrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -11,7 +14,7 @@ const AdminOrderList = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const data =  await axios.get("/orders/admin");
+        const data = await axios.get("/orders/admin");
         setOrders(data.data);
       } catch (err) {
         setError(
@@ -25,84 +28,61 @@ const AdminOrderList = () => {
     fetchOrders();
   }, []);
 
-
-  console.log("ssssss",orders)
   if (loading) return <Loader />;
   if (error) return <Message variant="danger">{error}</Message>;
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-3">All Orders</h2>
-      <table className="table table-bordered table-striped">
+    <>
+      <h1 className="page-title">All orders</h1>
+      <p className="page-subtitle">{orders.length} orders</p>
+
+      <Table responsive hover className="data-table">
         <thead>
           <tr>
-            <th>Order ID</th>
-            <th>User</th>
-            <th>Total</th>
-        
-            <th>Delivered</th>
-            <th>Address</th>
+            <th>Order</th>
+            <th>Customer</th>
             <th>Items</th>
-            <th>Created</th>
+            <th>Total</th>
+            <th>Delivery</th>
+            <th>Date</th>
             <th></th>
           </tr>
         </thead>
 
         <tbody>
-          {orders?.map((order) => (
+          {orders.map((order) => (
             <tr key={order._id}>
-              <td>{order._id}</td>
-
-              <td>{order.user?.name}</td>
-
-              <td>₹{order.totalPrice}</td>
-
-              {/* <td>
-                {order.isPaid ? (
-                  <span className="text-success">Paid</span>
-                ) : (
-                  <span className="text-danger">Not Paid</span>
-                )}
-              </td> */}
-
+              <td>#{order._id.slice(-8).toUpperCase()}</td>
               <td>
-                {order.isDelivered ? (
-                  <span className="text-success">Delivered</span>
-                ) : (
-                  <span className="text-warning">Pending</span>
-                )}
+                {order.user?.name}
+                <div className="table-muted">
+                  {order.shippingAddress?.city}, {order.shippingAddress?.country}
+                </div>
               </td>
-
-              <td>
-                {order.shippingAddress?.address},{" "}
-                {order.shippingAddress?.city},{" "}
-                {order.shippingAddress?.postalCode},{" "}
-                {order.shippingAddress?.country}
-              </td>
-
               <td>
                 {order.orderItems.map((item) => (
-                  <div key={item._id}>
+                  <div key={item.name}>
                     {item.name} × {item.qty}
                   </div>
                 ))}
               </td>
-
-              <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-
+              <td>{formatPrice(order.totalPrice)}</td>
               <td>
-                <a
-                  className="btn btn-primary btn-sm"
-                  href={`/admin/order/${order._id}`}
-                >
-                  View
-                </a>
+                {order.isDelivered ? (
+                  <Badge bg="success">Delivered</Badge>
+                ) : (
+                  <Badge bg="warning" text="dark">Pending</Badge>
+                )}
+              </td>
+              <td>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
+              <td>
+                <Link to={`/order/${order._id}`}>View</Link>
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </>
   );
 };
 
