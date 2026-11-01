@@ -72,6 +72,7 @@ const orderSchema = mongoose.Schema(
     totalPrice: { type: Number, required: true, default: 0.0 },
     couponCode: { type: String },
     discountPrice: { type: Number, required: true, default: 0.0 },
+    refundedAmount: { type: Number, required: true, default: 0.0 },
 
     isPaid: { type: Boolean, required: true, default: false },
     paidAt: { type: Date },

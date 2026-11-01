@@ -16,6 +16,8 @@ import offerRoutes from './routes/offerRoutes.js'
 import adRoutes from './routes/adRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import couponRoutes from './routes/couponRoutes.js'
+import returnRoutes from './routes/returnRoutes.js'
+import queryRoutes from './routes/queryRoutes.js'
 import path from 'path'
 const __dirname = path.resolve()
 // Connect DB
@@ -54,6 +56,8 @@ app.use('/api/offers', offerRoutes)
 app.use('/api/ads', adRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/coupons', couponRoutes)
+app.use('/api/returns', returnRoutes)
+app.use('/api/queries', queryRoutes)
 app.use('/images', express.static(path.join(__dirname, '/images')))
 
 // Error Handling Middlewares

@@ -30,6 +30,8 @@ export const registerUser = createAsyncThunk('user/register', async ({ name, ema
 
 const initialState = {
   userInfo: readJSON('userInfo', null),
+  // Lets signed-in pages send someone who just logged out to the shop, not to login
+  signedOut: false,
   loading: false,
   error: null
 }
@@ -40,6 +42,7 @@ const userSlice = createSlice({
   reducers: {
     logout(state) {
       state.userInfo = null
+      state.signedOut = true
       localStorage.removeItem('userInfo')
     },
     clearUserError(state) {
@@ -49,11 +52,11 @@ const userSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.pending, (state) => { state.loading = true; state.error = null })
-      .addCase(loginUser.fulfilled, (state, action) => { state.loading = false; state.userInfo = action.payload })
+      .addCase(loginUser.fulfilled, (state, action) => { state.loading = false; state.signedOut = false; state.userInfo = action.payload })
       .addCase(loginUser.rejected, (state, action) => { state.loading = false; state.error = action.payload })
 
       .addCase(registerUser.pending, (state) => { state.loading = true; state.error = null })
-      .addCase(registerUser.fulfilled, (state, action) => { state.loading = false; state.userInfo = action.payload })
+      .addCase(registerUser.fulfilled, (state, action) => { state.loading = false; state.signedOut = false; state.userInfo = action.payload })
       .addCase(registerUser.rejected, (state, action) => { state.loading = false; state.error = action.payload })
   }
 })

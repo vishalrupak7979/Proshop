@@ -183,6 +183,12 @@ const ProductScreen = () => {
             <Col lg={5}>
               <section className="reviews">
                 <h2>Customer reviews</h2>
+                <Link
+                  to={`/queries?product=${current._id}&topic=Product&subject=${encodeURIComponent(`Question about ${current.name}`)}`}
+                  className="help-link"
+                >
+                  Have a question about this product?
+                </Link>
                 {current.reviews.length === 0 ? (
                   <p>No reviews yet.</p>
                 ) : (

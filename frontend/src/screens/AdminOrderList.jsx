@@ -70,7 +70,7 @@ const AdminOrderList = () => {
 
   const revenue = orders
     .filter((order) => order.isPaid)
-    .reduce((acc, order) => acc + order.totalPrice, 0);
+    .reduce((acc, order) => acc + order.totalPrice - order.refundedAmount, 0);
   const toDeliver = orders.filter((order) => !order.isDelivered && order.status !== "Cancelled").length;
 
   return (

@@ -18,6 +18,16 @@ export const couponLimiter = rateLimit({
   message: { message: 'Too many attempts, please try again in a few minutes' },
 })
 
+// Keeps one account from flooding the support inbox
+export const queryLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  keyGenerator: (req) => req.user._id.toString(),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many messages, please try again later' },
+})
+
 // Slows down password guessing and reset email abuse
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

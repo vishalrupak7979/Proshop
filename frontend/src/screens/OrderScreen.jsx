@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Row, Col, Card, Image } from "react-bootstrap";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import OrderReturns from "../components/OrderReturns";
 import OrderTracker from "../components/OrderTracker";
 import StatusBadge from "../components/StatusBadge";
 import { getOrderById } from "../store/slices/orderSlice";
@@ -64,6 +65,7 @@ const OrderScreen = () => {
           ))}
 
           <OrderTracker order={order} />
+          {order.isDelivered && <OrderReturns orderId={order._id} />}
         </Col>
 
         <Col lg={4}>
@@ -94,6 +96,12 @@ const OrderScreen = () => {
                 <span>Total</span>
                 <span>{formatPrice(order.totalPrice)}</span>
               </div>
+              {order.refundedAmount > 0 && (
+                <div className="summary-row promo-saving">
+                  <span>Refunded</span>
+                  <span>{formatPrice(order.refundedAmount)}</span>
+                </div>
+              )}
 
               <h2 className="mt-4">Delivery address</h2>
               <address className="mb-0">
@@ -102,6 +110,10 @@ const OrderScreen = () => {
                 {address.country}
                 {address.phone && <><br />{address.phone}</>}
               </address>
+
+              <Link to={`/queries?order=${order._id}&topic=Order`} className="help-link">
+                Need help with this order?
+              </Link>
             </Card.Body>
           </Card>
         </Col>

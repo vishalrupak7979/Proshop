@@ -34,7 +34,7 @@ Password reset emails need a [Brevo](https://www.brevo.com) API key, with `EMAIL
 
 ## Running the store
 
-The admin area has a left sidebar that collapses to icons, with everything an admin needs:
+The left side menu is on every page and collapses to icons. Admins get an extra section with everything they need:
 
 - **Products:** add, edit or delete products. Images are stored in MongoDB, because Render's disk is wiped on each deploy.
 - **Festival offers:** percentage discounts on all products, categories or specific products, between two dates. The server applies them at checkout, and the biggest offer wins.
@@ -45,6 +45,12 @@ The admin area has a left sidebar that collapses to icons, with everything an ad
 ## Product details
 
 Products can have extra photos, specifications and colours. Colours share one stock count, and the chosen colour is saved on the order. To add sample details to products that have none, run `npm run seed:details` in `backend`; anything already filled in is left alone.
+
+## Returns and queries
+
+Customers can return items from a delivered order for 7 days. An admin approves or declines the request, marks the items received, then refunds. Card orders refund through Stripe, and cash orders are recorded as manual refunds. Refunds match what was paid, so they take promo codes into account.
+
+Customers can raise a query about an order, a product or anything else, and admins reply in a conversation under **Customer queries**.
 
 ## Shopper tools
 
