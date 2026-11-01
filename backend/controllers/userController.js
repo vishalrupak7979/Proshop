@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import User from '../models/userModel.js'
+import Order from '../models/orderModel.js'
 import generateToken from '../utils/generateToken.js'
 import sendEmail from '../utils/sendEmail.js'
 
@@ -28,6 +29,7 @@ export const authUser = async (req, res) => {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+      isDeliveryPartner: user.isDeliveryPartner,
       token: generateToken(user._id)
     })
   } catch (err) {
@@ -62,6 +64,7 @@ export const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
+      isDeliveryPartner: user.isDeliveryPartner,
       token: generateToken(user._id)
     })
   } catch (err) {
@@ -138,5 +141,80 @@ export const resetPassword = async (req, res) => {
     res.json({ message: 'Password updated' })
   } catch (err) {
     res.status(500).json({ message: 'Something went wrong, please try again' })
+  }
+}
+
+// ADMIN: LIST DELIVERY PARTNERS
+export const getDeliveryPartners = async (req, res) => {
+  try {
+    const partners = await User.find({ isDeliveryPartner: true }).select('name email phone').sort({ name: 1 })
+
+    const stats = await Order.aggregate([
+      { $match: { deliveryPartner: { $in: partners.map((p) => p._id) } } },
+      {
+        $group: {
+          _id: '$deliveryPartner',
+          active: { $sum: { $cond: [{ $in: ['$status', ['Assigned', 'Picked up', 'Out for delivery']] }, 1, 0] } },
+          delivered: { $sum: { $cond: [{ $eq: ['$status', 'Delivered'] }, 1, 0] } },
+          cashCollected: { $sum: { $cond: ['$codCollected', '$totalPrice', 0] } },
+        },
+      },
+    ])
+
+    res.json(partners.map((partner) => {
+      const stat = stats.find((s) => s._id.equals(partner._id))
+      return {
+        _id: partner._id,
+        name: partner.name,
+        email: partner.email,
+        phone: partner.phone,
+        active: stat?.active || 0,
+        delivered: stat?.delivered || 0,
+        cashCollected: stat?.cashCollected || 0,
+      }
+    }))
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// ADMIN: CREATE DELIVERY PARTNER
+export const createDeliveryPartner = async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body
+
+    if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Name and email are required' })
+    }
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' })
+    }
+    if (typeof phone !== 'string' || !/^[6-9]\d{9}$/.test(phone.trim())) {
+      return res.status(400).json({ message: 'Enter a 10 digit mobile number' })
+    }
+
+    if (await User.findOne({ email: email.trim() })) {
+      return res.status(400).json({ message: 'User already exists' })
+    }
+
+    const partner = await User.create({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      password,
+      isDeliveryPartner: true,
+    })
+
+    res.status(201).json({
+      _id: partner._id,
+      name: partner.name,
+      email: partner.email,
+      phone: partner.phone,
+      active: 0,
+      delivered: 0,
+      cashCollected: 0,
+    })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
   }
 }

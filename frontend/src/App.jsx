@@ -18,6 +18,13 @@ import ProfileScreen from './screens/ProfileScreen'
 import OrderScreen from './screens/OrderScreen'
 import PaymentSuccessScreen from './screens/PaymentSuccessScreen'
 import AdminOrderList from './screens/AdminOrderList'
+import AdminPartnerList from './screens/AdminPartnerList'
+import AdminProductList from './screens/AdminProductList'
+import AdminOfferList from './screens/AdminOfferList'
+import AdminAdList from './screens/AdminAdList'
+import AdminBroadcast from './screens/AdminBroadcast'
+import CheckoutScreen from './screens/CheckoutScreen'
+import DeliveryDashboard from './screens/DeliveryDashboard'
 
 const NotFound = () => (
   <div className="empty-state">
@@ -58,7 +65,14 @@ function App() {
               <Route path="/success" element={<ProtectedRoute><PaymentSuccessScreen /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
               <Route path="/order/:id" element={<ProtectedRoute><OrderScreen /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><CheckoutScreen /></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminOrderList /></ProtectedRoute>} />
+              <Route path="/admin/delivery-partners" element={<ProtectedRoute adminOnly><AdminPartnerList /></ProtectedRoute>} />
+              <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminProductList /></ProtectedRoute>} />
+              <Route path="/admin/offers" element={<ProtectedRoute adminOnly><AdminOfferList /></ProtectedRoute>} />
+              <Route path="/admin/ads" element={<ProtectedRoute adminOnly><AdminAdList /></ProtectedRoute>} />
+              <Route path="/admin/notifications" element={<ProtectedRoute adminOnly><AdminBroadcast /></ProtectedRoute>} />
+              <Route path="/delivery" element={<ProtectedRoute partnerOnly><DeliveryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ErrorBoundary>

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Table } from "react-bootstrap";
+import { Badge, Button, Form, Table } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import StatusBadge from "../components/StatusBadge";
 import { formatPrice } from "../utils/formatPrice";
+import { paymentLabel } from "../utils/orderStatus";
 import { usePageTitle } from "../utils/usePageTitle";
 
 const AdminOrderList = () => {
   const [orders, setOrders] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
@@ -19,8 +22,12 @@ const AdminOrderList = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const data = await axios.get("/orders/admin");
-        setOrders(data.data);
+        const [orderList, partnerList] = await Promise.all([
+          axios.get("/orders/admin"),
+          axios.get("/users/delivery-partners"),
+        ]);
+        setOrders(orderList.data);
+        setPartners(partnerList.data);
       } catch (err) {
         setError(
           err.response?.data?.message || "Failed to fetch order list"
@@ -33,20 +40,28 @@ const AdminOrderList = () => {
     fetchOrders();
   }, []);
 
-  const markDelivered = async (id) => {
+  const updateOrder = async (id, action, body, message) => {
     setUpdatingId(id);
     try {
-      const { data } = await axios.put(`/orders/${id}/deliver`);
+      const { data } = await axios.put(`/orders/${id}/${action}`, body);
       setOrders((current) =>
         current.map((order) =>
-          order._id === id ? { ...order, isDelivered: data.isDelivered } : order
+          order._id === id
+            ? { ...data, user: order.user, deliveryPartner: data.deliveryPartner?.name ? data.deliveryPartner : order.deliveryPartner }
+            : order
         )
       );
-      toast.success("Order marked as delivered");
+      toast.success(message);
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not update the order");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const cancelOrder = (order) => {
+    if (window.confirm(`Cancel order #${order._id.slice(-8).toUpperCase()}? Its stock will be put back.`)) {
+      updateOrder(order._id, "cancel", {}, "Order cancelled");
     }
   };
 
@@ -56,7 +71,7 @@ const AdminOrderList = () => {
   const revenue = orders
     .filter((order) => order.isPaid)
     .reduce((acc, order) => acc + order.totalPrice, 0);
-  const toDeliver = orders.filter((order) => !order.isDelivered).length;
+  const toDeliver = orders.filter((order) => !order.isDelivered && order.status !== "Cancelled").length;
 
   return (
     <>
@@ -85,6 +100,7 @@ const AdminOrderList = () => {
             <th>Items</th>
             <th>Total</th>
             <th>Status</th>
+            <th>Partner</th>
             <th>Date</th>
             <th></th>
           </tr>
@@ -110,26 +126,55 @@ const AdminOrderList = () => {
               <td>{formatPrice(order.totalPrice)}</td>
               <td>
                 <div className="status-stack">
-                  {order.isPaid ? <Badge bg="success">Paid</Badge> : <Badge bg="danger">Unpaid</Badge>}
-                  {order.isDelivered ? (
-                    <Badge bg="success">Delivered</Badge>
-                  ) : (
-                    <Badge bg="warning" text="dark">Pending</Badge>
-                  )}
+                  <Badge bg={order.isPaid ? "success" : "secondary"}>{paymentLabel(order)}</Badge>
+                  <StatusBadge status={order.status} />
                 </div>
+              </td>
+              <td>
+                {["Placed", "Assigned", "Failed"].includes(order.status) ? (
+                  <Form.Select
+                    size="sm"
+                    className="partner-select"
+                    aria-label={`Delivery partner for order ${order._id.slice(-8).toUpperCase()}`}
+                    disabled={updatingId === order._id}
+                    value={order.deliveryPartner?._id || ""}
+                    onChange={(e) =>
+                      e.target.value && updateOrder(order._id, "assign", { partnerId: e.target.value }, "Delivery partner assigned")
+                    }
+                  >
+                    <option value="">Choose partner</option>
+                    {partners.map((partner) => (
+                      <option key={partner._id} value={partner._id}>{partner.name}</option>
+                    ))}
+                  </Form.Select>
+                ) : (
+                  order.deliveryPartner?.name || "None"
+                )}
               </td>
               <td>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
               <td>
-                {!order.isDelivered && (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={updatingId === order._id}
-                    onClick={() => markDelivered(order._id)}
-                  >
-                    Mark delivered
-                  </Button>
-                )}
+                <div className="status-stack">
+                  {!order.isDelivered && order.status !== "Cancelled" && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={updatingId === order._id}
+                      onClick={() => updateOrder(order._id, "deliver", {}, "Order marked as delivered")}
+                    >
+                      Mark delivered
+                    </Button>
+                  )}
+                  {!order.isPaid && !order.isDelivered && order.status !== "Cancelled" && (
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      disabled={updatingId === order._id}
+                      onClick={() => cancelOrder(order)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

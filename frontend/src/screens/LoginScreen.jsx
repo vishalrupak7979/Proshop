@@ -26,7 +26,7 @@ const LoginScreen = () => {
 
   useEffect(() => {
     if (userInfo) {
-      navigate(redirect, { replace: true })
+      navigate(userInfo.isDeliveryPartner && redirect === '/' ? '/delivery' : redirect, { replace: true })
     }
   }, [userInfo, redirect, navigate])
 

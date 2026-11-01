@@ -30,6 +30,14 @@ export const protect = async (req, res, next) => {
   next()
 }
 
+export const deliveryPartner = (req, res, next) => {
+  if (req.user && req.user.isDeliveryPartner) {
+    next()
+  } else {
+    res.status(401).json({ message: 'Not authorized as a delivery partner' })
+  }
+}
+
 export const admin = (req, res, next) => {
   if (req.user && req.user.isAdmin) {
     next()

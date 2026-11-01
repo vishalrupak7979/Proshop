@@ -5,6 +5,7 @@ import userReducer from './slices/userSlice'
 import paymentReducer from "./slices/paymentSlice";
 import orderReducer from "./slices/orderSlice";
 import themeReducer from './slices/themeSlice'
+import notificationReducer from './slices/notificationSlice'
 const store = configureStore({
   reducer: {
     products: productReducer,
@@ -13,6 +14,7 @@ const store = configureStore({
     payment: paymentReducer,
      orders: orderReducer,
     theme: themeReducer,
+    notifications: notificationReducer,
   },
 })
 

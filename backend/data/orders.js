@@ -15,6 +15,8 @@ const orders = [
     daysAgo: 3,
     isPaid: true,
     isDelivered: false,
+    status: 'Out for delivery',
+    location: { lat: 12.9716, lng: 77.5946, label: 'Near MG Road Metro' },
   },
   {
     userEmail: 'jane@example.com',
@@ -29,8 +31,10 @@ const orders = [
     items: [['Samsung Galaxy Tab S8+', 1]],
     shippingAddress: { address: '48 Marine Drive', city: 'Mumbai', postalCode: '400020', country: 'India' },
     daysAgo: 1,
+    paymentMethod: 'COD',
     isPaid: false,
     isDelivered: false,
+    status: 'Assigned',
   },
 ]
 

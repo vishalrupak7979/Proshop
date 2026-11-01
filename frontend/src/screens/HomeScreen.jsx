@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
+import AdCarousel from '../components/AdCarousel'
 import ProductCard from '../components/ProductCard'
 import ProductSkeleton from '../components/ProductSkeleton'
 import Message from '../components/Message'
@@ -14,6 +15,7 @@ const SORTERS = {
   'price-asc': (a, b) => a.price - b.price,
   'price-desc': (a, b) => b.price - a.price,
   rating: (a, b) => b.rating - a.rating,
+  discount: (a, b) => (b.discountPercent || 0) - (a.discountPercent || 0),
 }
 
 const HomeScreen = () => {
@@ -56,10 +58,14 @@ const HomeScreen = () => {
 
   return (
     <>
-      <section className="hero">
-        <h1>Tech you&apos;ll actually love using.</h1>
-        <p>Phones, laptops, tablets and audio gear, with free delivery across India.</p>
-      </section>
+      <AdCarousel
+        fallback={(
+          <section className="hero">
+            <h1>Tech you&apos;ll actually love using.</h1>
+            <p>Phones, laptops, tablets and audio gear, with free delivery across India.</p>
+          </section>
+        )}
+      />
 
       <div className="toolbar">
         <Form.Control
@@ -74,6 +80,7 @@ const HomeScreen = () => {
           <option value="price-asc">Price: low to high</option>
           <option value="price-desc">Price: high to low</option>
           <option value="rating">Top rated</option>
+          <option value="discount">Biggest discount</option>
         </Form.Select>
       </div>
 

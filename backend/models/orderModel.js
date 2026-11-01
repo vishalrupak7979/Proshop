@@ -1,5 +1,34 @@
 import mongoose from 'mongoose'
 
+export const ORDER_STATUSES = [
+  'Placed',
+  'Assigned',
+  'Picked up',
+  'Out for delivery',
+  'Delivered',
+  'Failed',
+  'Cancelled',
+]
+
+const statusEventSchema = mongoose.Schema(
+  {
+    status: { type: String, required: true },
+    note: { type: String },
+    at: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false }
+)
+
+const locationSchema = mongoose.Schema(
+  {
+    lat: { type: Number },
+    lng: { type: Number },
+    label: { type: String },
+    updatedAt: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false }
+)
+
 const orderItemSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -30,6 +59,7 @@ const orderSchema = mongoose.Schema(
       city: { type: String, required: true },
       postalCode: { type: String, required: true },
       country: { type: String, required: true },
+      phone: { type: String },
     },
 
     paymentMethod: { type: String, required: true },
@@ -45,6 +75,26 @@ const orderSchema = mongoose.Schema(
 
     isDelivered: { type: Boolean, required: true, default: false },
     deliveredAt: { type: Date },
+
+    // Orders from before delivery tracking have no status saved
+    status: {
+      type: String,
+      enum: ORDER_STATUSES,
+      default: function () {
+        return this.isDelivered ? 'Delivered' : 'Placed'
+      },
+    },
+    statusHistory: [statusEventSchema],
+
+    deliveryPartner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    currentLocation: { type: locationSchema },
+
+    codCollected: { type: Boolean, required: true, default: false },
+    codCollectedAt: { type: Date },
   },
   { timestamps: true }
 )

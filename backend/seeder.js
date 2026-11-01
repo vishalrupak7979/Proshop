@@ -21,18 +21,28 @@ const buildOrder = (order, createdUsers, createdProducts) => {
   })
   const totalPrice = orderItems.reduce((acc, item) => acc + item.qty * item.price, 0)
   const createdAt = new Date(Date.now() - order.daysAgo * DAY)
+  const status = order.status || (order.isDelivered ? 'Delivered' : 'Placed')
+  const partner = createdUsers.find(u => u.isDeliveryPartner)
+  const isAssigned = status !== 'Placed'
 
   return {
     user: createdUsers.find(u => u.email === order.userEmail)._id,
     orderItems,
     shippingAddress: order.shippingAddress,
-    paymentMethod: 'Stripe',
+    paymentMethod: order.paymentMethod || 'Stripe',
     itemsPrice: totalPrice,
     totalPrice,
     isPaid: order.isPaid,
     paidAt: order.isPaid ? createdAt : undefined,
     isDelivered: order.isDelivered,
     deliveredAt: order.isDelivered ? new Date(createdAt.getTime() + 2 * DAY) : undefined,
+    status,
+    statusHistory: [
+      { status: 'Placed', at: createdAt },
+      ...(status === 'Placed' ? [] : [{ status, at: new Date(createdAt.getTime() + DAY) }]),
+    ],
+    deliveryPartner: isAssigned ? partner._id : undefined,
+    currentLocation: order.location,
     createdAt,
   }
 }

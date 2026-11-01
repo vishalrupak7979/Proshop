@@ -10,6 +10,10 @@ import orderRoutes from './routes/orderRoutes.js'
 
 import { errorHandler, notFound } from './middleware/errorMiddleware.js'
 import paymentRoutes from "./routes/paymentRoutes.js";
+import uploadRoutes from './routes/uploadRoutes.js'
+import offerRoutes from './routes/offerRoutes.js'
+import adRoutes from './routes/adRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
 import path from 'path'
 const __dirname = path.resolve()
 // Load env
@@ -46,6 +50,10 @@ app.use('/api/products', productRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/orders', orderRoutes)
 app.use("/api/payment", paymentRoutes);
+app.use('/api/images', uploadRoutes)
+app.use('/api/offers', offerRoutes)
+app.use('/api/ads', adRoutes)
+app.use('/api/notifications', notificationRoutes)
 app.use('/images', express.static(path.join(__dirname, '/images')))
 
 // Error Handling Middlewares

@@ -2,9 +2,9 @@ import { Card, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import PriceTag from "./PriceTag";
 import Rating from "./Rating";
 import { addToCart } from "../store/slices/cartSlice";
-import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
 import { maxQty } from "../utils/quantity";
 
@@ -44,7 +44,7 @@ const ProductCard = ({ product }) => {
 
         <Rating value={product.rating} text={`(${product.numReviews})`} />
 
-        <div className="product-price">{formatPrice(product.price)}</div>
+        <PriceTag product={product} />
 
         <Button
           variant="primary"

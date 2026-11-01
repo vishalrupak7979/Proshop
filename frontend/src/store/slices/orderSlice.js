@@ -17,6 +17,24 @@ export const confirmStripeOrder = createAsyncThunk(
   }
 );
 
+// PLACE CASH ON DELIVERY ORDER
+export const createCodOrder = createAsyncThunk(
+  "orders/createCodOrder",
+  async ({ cartItems, shippingAddress }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post("/orders/cod", {
+        cartItems: cartItems.map(({ _id, qty }) => ({ _id, qty })),
+        shippingAddress,
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Could not place your order"
+      );
+    }
+  }
+);
+
 // GET LOGGED IN USER'S ORDERS
 export const getMyOrders = createAsyncThunk(
   "orders/getMyOrders",

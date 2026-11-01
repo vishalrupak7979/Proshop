@@ -21,6 +21,14 @@ const cartSlice = createSlice({
       }
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
     },
+    // Offers and stock can change after an item was added
+    refreshCartItems(state, action) {
+      state.cartItems = state.cartItems.flatMap((item) => {
+        const latest = action.payload.find((p) => p._id === item._id)
+        return latest ? [{ ...latest, qty: Math.min(item.qty, Math.max(latest.countInStock, 1)) }] : []
+      })
+      localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
+    },
     removeFromCart(state, action) {
       state.cartItems = state.cartItems.filter((x) => x._id !== action.payload)
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
@@ -40,5 +48,5 @@ const cartSlice = createSlice({
   }
 })
 
-export const { addToCart, removeFromCart, clearCart, saveShippingAddress, savePaymentMethod } = cartSlice.actions
+export const { addToCart, refreshCartItems, removeFromCart, clearCart, saveShippingAddress, savePaymentMethod } = cartSlice.actions
 export default cartSlice.reducer

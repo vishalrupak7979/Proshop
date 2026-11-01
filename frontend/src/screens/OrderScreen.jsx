@@ -1,18 +1,23 @@
 import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Row, Col, Card, Badge, Image } from "react-bootstrap";
+import { Row, Col, Card, Image } from "react-bootstrap";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import OrderTracker from "../components/OrderTracker";
+import StatusBadge from "../components/StatusBadge";
 import { getOrderById } from "../store/slices/orderSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
+import { isOrderActive, paymentLabel } from "../utils/orderStatus";
 import { usePageTitle } from "../utils/usePageTitle";
+
+const REFRESH_MS = 20000;
 
 const OrderScreen = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { order, loading, error } = useSelector((state) => state.orders);
+  const { order, error } = useSelector((state) => state.orders);
 
   usePageTitle("Order details");
 
@@ -20,8 +25,18 @@ const OrderScreen = () => {
     dispatch(getOrderById(id));
   }, [dispatch, id]);
 
-  if (error) return <Message variant="danger">{error}</Message>;
-  if (loading || order?._id !== id) return <Loader />;
+  const current = order?._id === id ? order : null;
+  const active = current ? isOrderActive(current.status) : false;
+
+  // Keep tracking up to date without the customer reloading the page
+  useEffect(() => {
+    if (!active) return undefined;
+    const timer = setInterval(() => dispatch(getOrderById(id)), REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [active, dispatch, id]);
+
+  if (error && !current) return <Message variant="danger">{error}</Message>;
+  if (!current) return <Loader />;
 
   const { shippingAddress: address } = order;
 
@@ -46,6 +61,8 @@ const OrderScreen = () => {
               <strong>{formatPrice(item.qty * item.price)}</strong>
             </div>
           ))}
+
+          <OrderTracker order={order} />
         </Col>
 
         <Col lg={4}>
@@ -53,12 +70,12 @@ const OrderScreen = () => {
             <Card.Body>
               <h2>Summary</h2>
               <div className="summary-row">
-                <span>Delivery</span>
-                {order.isDelivered ? <Badge bg="success">Delivered</Badge> : <Badge bg="warning" text="dark">On the way</Badge>}
+                <span>Status</span>
+                <StatusBadge status={order.status} />
               </div>
               <div className="summary-row">
                 <span>Payment</span>
-                {order.isPaid ? <Badge bg="success">Paid by {order.paymentMethod}</Badge> : <Badge bg="danger">Unpaid</Badge>}
+                <span>{paymentLabel(order)}</span>
               </div>
               <div className="summary-row summary-total">
                 <span>Total</span>
@@ -70,6 +87,7 @@ const OrderScreen = () => {
                 {address.address}<br />
                 {address.city} {address.postalCode}<br />
                 {address.country}
+                {address.phone && <><br />{address.phone}</>}
               </address>
             </Card.Body>
           </Card>

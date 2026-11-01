@@ -25,6 +25,13 @@ const users = [
     email: 'jane@example.com',
     password,
   },
+  {
+    name: 'Ravi Kumar',
+    email: 'partner@example.com',
+    phone: '9876543210',
+    password,
+    isDeliveryPartner: true,
+  },
 ]
 
 export default users

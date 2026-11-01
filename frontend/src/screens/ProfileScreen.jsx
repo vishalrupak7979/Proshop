@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Badge, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import StatusBadge from "../components/StatusBadge";
 import { getMyOrders } from "../store/slices/orderSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -42,7 +43,7 @@ const ProfileScreen = () => {
               <th>Order</th>
               <th>Date</th>
               <th>Total</th>
-              <th>Delivery</th>
+              <th>Status</th>
               <th></th>
             </tr>
           </thead>
@@ -52,9 +53,7 @@ const ProfileScreen = () => {
                 <td>#{order._id.slice(-8).toUpperCase()}</td>
                 <td>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
                 <td>{formatPrice(order.totalPrice)}</td>
-                <td>
-                  {order.isDelivered ? <Badge bg="success">Delivered</Badge> : <Badge bg="warning" text="dark">On the way</Badge>}
-                </td>
+                <td><StatusBadge status={order.status} /></td>
                 <td><Link to={`/order/${order._id}`}>View</Link></td>
               </tr>
             ))}

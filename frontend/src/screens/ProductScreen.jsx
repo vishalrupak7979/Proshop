@@ -5,10 +5,10 @@ import { Row, Col, Image, Card, Button, Form, Badge } from 'react-bootstrap'
 import { FaArrowLeft } from 'react-icons/fa'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
+import PriceTag from '../components/PriceTag'
 import Rating from '../components/Rating'
 import { fetchProductById } from '../store/slices/productSlice'
 import { addToCart } from '../store/slices/cartSlice'
-import { formatPrice } from '../utils/formatPrice'
 import { imageUrl } from '../utils/imageUrl'
 import { qtyOptions } from '../utils/quantity'
 import { usePageTitle } from '../utils/usePageTitle'
@@ -55,7 +55,8 @@ const ProductScreen = () => {
               <div className="product-brand">{current.brand} · {current.category}</div>
               <h1 className="product-name">{current.name}</h1>
               <Rating value={current.rating} text={`${current.rating} (${current.numReviews} reviews)`} />
-              <div className="product-price product-price-lg">{formatPrice(current.price)}</div>
+              <PriceTag product={current} large />
+              {current.offerName && <p className="offer-note">{current.offerName}</p>}
               <p className="product-description">{current.description}</p>
 
               <Card className="buy-box">

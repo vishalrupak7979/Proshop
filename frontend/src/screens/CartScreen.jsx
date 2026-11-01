@@ -1,10 +1,10 @@
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Row, Col, Image, Button, Form, Card } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { FaTrash } from "react-icons/fa";
-import { toast } from "react-toastify";
-import { removeFromCart, addToCart } from "../store/slices/cartSlice";
-import { createCheckoutSessionThunk } from "../store/slices/paymentSlice";
+import api from "../api/axios";
+import { removeFromCart, addToCart, refreshCartItems } from "../store/slices/cartSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
 import { qtyOptions } from "../utils/quantity";
@@ -14,10 +14,13 @@ const CartScreen = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { cartItems } = useSelector((state) => state.cart);
-  const { loading } = useSelector((state) => state.payment);
   const { userInfo } = useSelector((state) => state.user);
 
   usePageTitle("Cart");
+
+  useEffect(() => {
+    api.get("/products").then(({ data }) => dispatch(refreshCartItems(data))).catch(() => {});
+  }, [dispatch]);
 
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const totalPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
@@ -30,20 +33,9 @@ const CartScreen = () => {
     dispatch(addToCart({ ...item, qty }));
   };
 
-  const handlePayment = async () => {
-    // The order is saved against the user after payment, so sign in first
-    if (!userInfo) {
-      navigate("/login?redirect=/cart");
-      return;
-    }
-
-    const result = await dispatch(createCheckoutSessionThunk(cartItems));
-
-    if (result.meta.requestStatus === "fulfilled") {
-      window.location.href = result.payload.url;
-    } else {
-      toast.error(result.payload);
-    }
+  // Orders belong to an account, so sign in before checkout
+  const checkoutHandler = () => {
+    navigate(userInfo ? "/checkout" : "/login?redirect=/checkout");
   };
 
   if (cartItems.length === 0) {
@@ -109,8 +101,8 @@ const CartScreen = () => {
                 <span>{formatPrice(totalPrice)}</span>
               </div>
               <div className="d-grid mt-3">
-                <Button type="button" disabled={loading} onClick={handlePayment}>
-                  {loading ? "Processing..." : userInfo ? "Proceed to checkout" : "Sign in to checkout"}
+                <Button type="button" onClick={checkoutHandler}>
+                  {userInfo ? "Proceed to checkout" : "Sign in to checkout"}
                 </Button>
               </div>
             </Card.Body>
