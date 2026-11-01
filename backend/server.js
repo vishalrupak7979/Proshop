@@ -1,5 +1,6 @@
+// Must stay first: other imports read these settings as they load
+import 'dotenv/config'
 import express from 'express'
-import dotenv from 'dotenv'
 import colors from 'colors'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -14,11 +15,9 @@ import uploadRoutes from './routes/uploadRoutes.js'
 import offerRoutes from './routes/offerRoutes.js'
 import adRoutes from './routes/adRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import couponRoutes from './routes/couponRoutes.js'
 import path from 'path'
 const __dirname = path.resolve()
-// Load env
-dotenv.config()
-
 // Connect DB
 connectDB()
 
@@ -54,6 +53,7 @@ app.use('/api/images', uploadRoutes)
 app.use('/api/offers', offerRoutes)
 app.use('/api/ads', adRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/coupons', couponRoutes)
 app.use('/images', express.static(path.join(__dirname, '/images')))
 
 // Error Handling Middlewares
