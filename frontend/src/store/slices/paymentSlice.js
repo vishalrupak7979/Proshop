@@ -1,13 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../api/axios";
+import { cartLinePayload } from "../../utils/cartLine";
 
 // The server looks up prices itself, so only ids and quantities are sent
 export const createCheckoutSessionThunk = createAsyncThunk(
   "payment/createCheckoutSession",
-  async (cartItems, { rejectWithValue }) => {
+  async ({ cartItems, couponCode }, { rejectWithValue }) => {
     try {
       const { data } = await axios.post("/payment/create-checkout-session", {
-        cartItems: cartItems.map(({ _id, qty }) => ({ _id, qty })),
+        cartItems: cartItems.map(cartLinePayload),
+        couponCode,
       });
       return data; // { url }
     } catch (err) {

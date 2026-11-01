@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 import Ad from '../models/adModel.js'
+import Coupon from '../models/couponModel.js'
 import { deleteUploadedImage } from './uploadController.js'
+import { isCouponLive, normalizeCode } from '../utils/coupons.js'
 import { isSafeLink } from '../utils/safeLink.js'
 
 const readAd = (body) => {
@@ -31,6 +33,7 @@ const readAd = (body) => {
       text: text('text'),
       image: text('image'),
       link: text('link'),
+      couponCode: normalizeCode(body.couponCode) || undefined,
       startsAt,
       endsAt,
       isActive: body.isActive !== false,
@@ -52,7 +55,15 @@ export const getLiveAds = async (req, res) => {
       ],
     }).sort({ createdAt: -1 })
 
-    res.json(ads)
+    // A banner must never advertise a code that no longer works
+    const codes = ads.map((ad) => ad.couponCode).filter(Boolean)
+    const coupons = await Coupon.find({ code: { $in: codes } }).select('-usedBy')
+    const liveCodes = coupons.filter((coupon) => isCouponLive(coupon)).map((coupon) => coupon.code)
+
+    res.json(ads.map((ad) => ({
+      ...ad.toObject(),
+      couponCode: liveCodes.includes(ad.couponCode) ? ad.couponCode : undefined,
+    })))
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -73,6 +84,9 @@ export const createAd = async (req, res) => {
     if (error) {
       return res.status(400).json({ message: error })
     }
+    if (fields.couponCode && !(await Coupon.exists({ code: fields.couponCode }))) {
+      return res.status(400).json({ message: 'That promo code does not exist' })
+    }
 
     res.status(201).json(await Ad.create(fields))
   } catch (err) {
@@ -92,6 +106,9 @@ export const updateAd = async (req, res) => {
 
     if (error) {
       return res.status(400).json({ message: error })
+    }
+    if (fields.couponCode && !(await Coupon.exists({ code: fields.couponCode }))) {
+      return res.status(400).json({ message: 'That promo code does not exist' })
     }
 
     const oldImage = ad.image

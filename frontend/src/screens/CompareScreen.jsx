@@ -12,6 +12,7 @@ import ProductPicker from '../components/ProductPicker'
 import Rating from '../components/Rating'
 import { addToCart } from '../store/slices/cartSlice'
 import { addToCompare, clearCompare, MAX_COMPARE, removeFromCompare } from '../store/slices/compareSlice'
+import { withColor } from '../utils/cartLine'
 import { imageUrl } from '../utils/imageUrl'
 import { usePageTitle } from '../utils/usePageTitle'
 
@@ -49,12 +50,14 @@ const CompareScreen = () => {
   const pricesDiffer = new Set(products.map((p) => p.price)).size > 1
   const ratingsDiffer = new Set(products.map((p) => p.rating)).size > 1
 
+  const specLabels = [...new Set(products.flatMap((p) => p.specifications.map((spec) => spec.label)))]
+
   const addProduct = (product) => {
     if (cartItems.some((item) => item._id === product._id)) {
       toast.info(`${product.name} is already in your cart`, { toastId: product._id })
       return
     }
-    dispatch(addToCart({ ...product, qty: 1 }))
+    dispatch(addToCart({ ...withColor(product), qty: 1 }))
     toast.success(`${product.name} added to cart`, { toastId: product._id })
   }
 
@@ -84,6 +87,11 @@ const CompareScreen = () => {
       render: (p) => (p.countInStock > 0 ? `${p.countInStock} in stock` : 'Out of stock'),
     },
     { label: 'Offer', render: (p) => p.offerName || 'None' },
+    { label: 'Colours', render: (p) => p.colors.map((c) => c.name).join(', ') || 'One colour' },
+    ...specLabels.map((label) => ({
+      label,
+      render: (p) => p.specifications.find((spec) => spec.label === label)?.value || '—',
+    })),
     { label: 'Description', render: (p) => p.description },
   ]
 

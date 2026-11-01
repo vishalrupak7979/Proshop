@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../api/axios";
 import { logout } from "./userSlice";
+import { cartLinePayload } from "../../utils/cartLine";
 
 // SAVE ORDER AFTER STRIPE PAYMENT
 export const confirmStripeOrder = createAsyncThunk(
@@ -20,11 +21,12 @@ export const confirmStripeOrder = createAsyncThunk(
 // PLACE CASH ON DELIVERY ORDER
 export const createCodOrder = createAsyncThunk(
   "orders/createCodOrder",
-  async ({ cartItems, shippingAddress }, { rejectWithValue }) => {
+  async ({ cartItems, shippingAddress, couponCode }, { rejectWithValue }) => {
     try {
       const { data } = await axios.post("/orders/cod", {
-        cartItems: cartItems.map(({ _id, qty }) => ({ _id, qty })),
+        cartItems: cartItems.map(cartLinePayload),
         shippingAddress,
+        couponCode,
       });
       return data;
     } catch (error) {

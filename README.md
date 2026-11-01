@@ -38,8 +38,13 @@ The admin area has a left sidebar that collapses to icons, with everything an ad
 
 - **Products:** add, edit or delete products. Images are stored in MongoDB, because Render's disk is wiped on each deploy.
 - **Festival offers:** percentage discounts on all products, categories or specific products, between two dates. The server applies them at checkout, and the biggest offer wins.
+- **Promo codes:** percentage codes with an optional maximum discount, minimum order, usage limit and dates. Each customer can use a code once, and it comes off after any festival offer.
 - **Advertisements:** banners on the home page, replacing the welcome banner while any are showing. Pick a ready-made sample banner or upload your own; wide images work best.
 - **Send notification:** in-app messages to customers, partners or everyone. Order updates are sent automatically.
+
+## Product details
+
+Products can have extra photos, specifications and colours. Colours share one stock count, and the chosen colour is saved on the order. To add sample details to products that have none, run `npm run seed:details` in `backend`; anything already filled in is left alone.
 
 ## Shopper tools
 

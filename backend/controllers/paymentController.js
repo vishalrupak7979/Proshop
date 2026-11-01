@@ -1,5 +1,6 @@
 import priceCart from '../utils/priceCart.js'
 import stripe from '../utils/stripe.js'
+import { checkCoupon } from '../utils/coupons.js'
 
 export const createCheckoutSession = async (req, res) => {
   try {
@@ -9,12 +10,36 @@ export const createCheckoutSession = async (req, res) => {
       return res.status(400).json({ message: error })
     }
 
-    const line_items = items.map(({ product, qty, unitPrice }) => ({
+    let discounts
+    let metadata = {}
+
+    if (req.body.couponCode) {
+      const subtotal = items.reduce((acc, { unitPrice, qty }) => acc + unitPrice * qty, 0)
+      const { coupon, discount, error: couponError } = await checkCoupon(req.body.couponCode, req.user._id, subtotal)
+
+      if (couponError) {
+        return res.status(400).json({ message: couponError })
+      }
+
+      // A one-use Stripe coupon, so Stripe charges exactly this discount
+      const stripeCoupon = await stripe.coupons.create({
+        amount_off: Math.round(discount * 100),
+        currency: 'inr',
+        duration: 'once',
+        max_redemptions: 1,
+        name: coupon.code,
+      })
+
+      discounts = [{ coupon: stripeCoupon.id }]
+      metadata = { couponCode: coupon.code }
+    }
+
+    const line_items = items.map(({ product, qty, unitPrice, color, image }) => ({
       price_data: {
         currency: 'inr',
         product_data: {
-          name: product.name,
-          metadata: { productId: product._id.toString(), image: product.image },
+          name: color ? `${product.name} (${color})` : product.name,
+          metadata: { productId: product._id.toString(), image, name: product.name, color: color || '' },
         },
         unit_amount: Math.round(unitPrice * 100), // amount in paise
       },
@@ -26,6 +51,8 @@ export const createCheckoutSession = async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
+      discounts,
+      metadata,
       mode: 'payment',
       client_reference_id: req.user._id.toString(),
       customer_email: req.user.email,

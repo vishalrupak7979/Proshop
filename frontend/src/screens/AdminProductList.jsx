@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Col, Form, Image, Modal, Row, Table } from 'react-bootstrap'
+import { FaTimes, FaTrash } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import axios from '../api/axios'
 import ImagePicker from '../components/ImagePicker'
@@ -12,7 +13,20 @@ import { usePageTitle } from '../utils/usePageTitle'
 
 const PAGE_SIZE = 12
 
-const EMPTY_PRODUCT = { name: '', brand: '', category: '', description: '', image: '', price: '', countInStock: '' }
+const EMPTY_PRODUCT = {
+  name: '',
+  brand: '',
+  category: '',
+  description: '',
+  image: '',
+  images: [],
+  specifications: [],
+  colors: [],
+  price: '',
+  countInStock: '',
+}
+
+const MAX_GALLERY = 8
 
 const AdminProductList = () => {
   const [products, setProducts] = useState([])
@@ -33,6 +47,17 @@ const AdminProductList = () => {
   }, [])
 
   const setField = (field) => (e) => setForm({ ...form, [field]: e.target.value })
+
+  const setRow = (list, index, field) => (e) =>
+    setForm((f) => ({
+      ...f,
+      [list]: f[list].map((row, i) => (i === index ? { ...row, [field]: e.target.value } : row)),
+    }))
+
+  const addRow = (list, row) => setForm((f) => ({ ...f, [list]: [...f[list], row] }))
+
+  const removeRow = (list, index) =>
+    setForm((f) => ({ ...f, [list]: f[list].filter((_, i) => i !== index) }))
 
   const saveProduct = async (e) => {
     e.preventDefault()
@@ -183,10 +208,100 @@ const AdminProductList = () => {
                 </Col>
               </Row>
 
-              <Form.Group controlId="description">
+              <Form.Group controlId="description" className="mb-3">
                 <Form.Label>Description</Form.Label>
                 <Form.Control as="textarea" rows={4} required value={form.description} onChange={setField('description')} />
               </Form.Group>
+
+              <div className="form-section">
+                <h3>More photos</h3>
+                {form.images.length > 0 && (
+                  <div className="gallery-edit">
+                    {form.images.map((image, index) => (
+                      <div key={image} className="gallery-edit-item">
+                        <Image src={imageUrl(image)} alt="" />
+                        <button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => removeRow('images', index)}>
+                          <FaTimes aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {form.images.length < MAX_GALLERY && (
+                  <ImagePicker
+                    id="gallery-upload"
+                    label="Add a photo"
+                    value=""
+                    onChange={(image) => addRow('images', image)}
+                  />
+                )}
+              </div>
+
+              <div className="form-section">
+                <h3>Colours</h3>
+                {form.colors.map((color, index) => (
+                  <div key={index} className="form-row-line">
+                    <Form.Control
+                      type="color"
+                      className="color-input"
+                      aria-label={`Colour ${index + 1} shade`}
+                      value={color.hex}
+                      onChange={setRow('colors', index, 'hex')}
+                    />
+                    <Form.Control
+                      required
+                      placeholder="Name, e.g. Midnight Blue"
+                      aria-label={`Colour ${index + 1} name`}
+                      value={color.name}
+                      onChange={setRow('colors', index, 'name')}
+                    />
+                    <Form.Select
+                      aria-label={`Colour ${index + 1} photo`}
+                      value={color.image || ''}
+                      onChange={setRow('colors', index, 'image')}
+                    >
+                      <option value="">No photo</option>
+                      {[form.image, ...form.images].filter(Boolean).map((image, photoIndex) => (
+                        <option key={image} value={image}>Photo {photoIndex + 1}</option>
+                      ))}
+                    </Form.Select>
+                    <Button variant="light" aria-label={`Remove colour ${index + 1}`} onClick={() => removeRow('colors', index)}>
+                      <FaTrash aria-hidden="true" />
+                    </Button>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline-primary" onClick={() => addRow('colors', { name: '', hex: '#1d4ed8' })}>
+                  Add colour
+                </Button>
+              </div>
+
+              <div className="form-section">
+                <h3>Specifications</h3>
+                {form.specifications.map((spec, index) => (
+                  <div key={index} className="form-row-line">
+                    <Form.Control
+                      required
+                      placeholder="e.g. Display"
+                      aria-label={`Specification ${index + 1} name`}
+                      value={spec.label}
+                      onChange={setRow('specifications', index, 'label')}
+                    />
+                    <Form.Control
+                      required
+                      placeholder="e.g. 6.1-inch OLED"
+                      aria-label={`Specification ${index + 1} value`}
+                      value={spec.value}
+                      onChange={setRow('specifications', index, 'value')}
+                    />
+                    <Button variant="light" aria-label={`Remove specification ${index + 1}`} onClick={() => removeRow('specifications', index)}>
+                      <FaTrash aria-hidden="true" />
+                    </Button>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline-primary" onClick={() => addRow('specifications', { label: '', value: '' })}>
+                  Add specification
+                </Button>
+              </div>
             </Modal.Body>
             <Modal.Footer>
               <Button variant="link" onClick={() => setForm(null)}>Cancel</Button>

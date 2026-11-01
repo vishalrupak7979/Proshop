@@ -8,6 +8,7 @@ import Loader from '../components/Loader'
 import Message from '../components/Message'
 import ProductPicker from '../components/ProductPicker'
 import { addToCart } from '../store/slices/cartSlice'
+import { withColor } from '../utils/cartLine'
 import { formatPrice } from '../utils/formatPrice'
 import { imageUrl } from '../utils/imageUrl'
 import { qtyOptions } from '../utils/quantity'
@@ -47,7 +48,7 @@ const CalculatorScreen = () => {
     setLines((current) => current.map((line) => (line.id === id ? { ...line, qty } : line)))
 
   const addAllToCart = () => {
-    rows.forEach(({ product, qty }) => dispatch(addToCart({ ...product, qty })))
+    rows.forEach(({ product, qty }) => dispatch(addToCart({ ...withColor(product), qty })))
     navigate('/cart')
   }
 

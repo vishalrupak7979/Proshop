@@ -9,6 +9,7 @@ import {
   FaClipboardList,
   FaStore,
   FaTags,
+  FaTicketAlt,
   FaTruck,
 } from 'react-icons/fa'
 import { readJSON } from '../utils/storage'
@@ -20,6 +21,7 @@ const LINKS = [
   { to: '/admin/orders', label: 'Orders', Icon: FaClipboardList },
   { to: '/admin/products', label: 'Products', Icon: FaBoxOpen },
   { to: '/admin/offers', label: 'Festival offers', Icon: FaTags },
+  { to: '/admin/coupons', label: 'Promo codes', Icon: FaTicketAlt },
   { to: '/admin/ads', label: 'Advertisements', Icon: FaBullhorn },
   { to: '/admin/delivery-partners', label: 'Delivery partners', Icon: FaTruck },
   { to: '/admin/notifications', label: 'Send notification', Icon: FaBell },

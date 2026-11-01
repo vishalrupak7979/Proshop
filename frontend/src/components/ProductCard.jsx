@@ -8,12 +8,13 @@ import Rating from "./Rating";
 import { addToCart } from "../store/slices/cartSlice";
 import { addToCompare, MAX_COMPARE, removeFromCompare } from "../store/slices/compareSlice";
 import { imageUrl } from "../utils/imageUrl";
+import { lineKey, withColor } from "../utils/cartLine";
 import { maxQty } from "../utils/quantity";
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const inCart = useSelector((state) =>
-    state.cart.cartItems.find((item) => item._id === product._id)
+    state.cart.cartItems.find((item) => lineKey(item) === lineKey(withColor(product)))
   );
 
   const compareIds = useSelector((state) => state.compare.ids);
@@ -34,7 +35,7 @@ const ProductCard = ({ product }) => {
 
   const addToCartHandler = () => {
     const qty = Math.min((inCart?.qty || 0) + 1, maxQty(product.countInStock));
-    dispatch(addToCart({ ...product, qty }));
+    dispatch(addToCart({ ...withColor(product), qty }));
     toast.success(`${product.name} added to cart`, { toastId: product._id });
   };
 

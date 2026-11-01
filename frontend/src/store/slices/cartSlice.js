@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { readJSON } from '../../utils/storage'
+import { lineKey } from '../../utils/cartLine'
 
 const initialState = {
   cartItems: readJSON('cartItems', []),
@@ -13,9 +14,9 @@ const cartSlice = createSlice({
   reducers: {
     addToCart(state, action) {
       const item = action.payload
-      const exist = state.cartItems.find((x) => x._id === item._id)
+      const exist = state.cartItems.find((x) => lineKey(x) === lineKey(item))
       if (exist) {
-        state.cartItems = state.cartItems.map((x) => (x._id === exist._id ? item : x))
+        state.cartItems = state.cartItems.map((x) => (x === exist ? item : x))
       } else {
         state.cartItems.push(item)
       }
@@ -25,12 +26,14 @@ const cartSlice = createSlice({
     refreshCartItems(state, action) {
       state.cartItems = state.cartItems.flatMap((item) => {
         const latest = action.payload.find((p) => p._id === item._id)
-        return latest ? [{ ...latest, qty: Math.min(item.qty, Math.max(latest.countInStock, 1)) }] : []
+        return latest
+          ? [{ ...latest, color: item.color, image: item.image, qty: Math.min(item.qty, Math.max(latest.countInStock, 1)) }]
+          : []
       })
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
     },
     removeFromCart(state, action) {
-      state.cartItems = state.cartItems.filter((x) => x._id !== action.payload)
+      state.cartItems = state.cartItems.filter((x) => lineKey(x) !== action.payload)
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems))
     },
     clearCart(state) {

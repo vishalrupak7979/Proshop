@@ -118,12 +118,15 @@ const AdminOrderList = () => {
               </td>
               <td>
                 {order.orderItems.map((item) => (
-                  <div key={item.name}>
-                    {item.name} × {item.qty}
+                  <div key={`${item.name}-${item.color}`}>
+                    {item.name}{item.color && ` (${item.color})`} × {item.qty}
                   </div>
                 ))}
               </td>
-              <td>{formatPrice(order.totalPrice)}</td>
+              <td>
+                {formatPrice(order.totalPrice)}
+                {order.couponCode && <div className="table-muted">{order.couponCode}</div>}
+              </td>
               <td>
                 <div className="status-stack">
                   <Badge bg={order.isPaid ? "success" : "secondary"}>{paymentLabel(order)}</Badge>

@@ -4,6 +4,7 @@ import Product from '../models/productModel.js'
 import User from '../models/userModel.js'
 import stripe from '../utils/stripe.js'
 import priceCart from '../utils/priceCart.js'
+import { checkCoupon, recordCouponUse, redeemCoupon, releaseCoupon } from '../utils/coupons.js'
 import notify, { adminIds } from '../utils/notify.js'
 
 const DUPLICATE_KEY = 11000
@@ -132,9 +133,10 @@ export const createOrderFromStripe = async (req, res) => {
     })
 
     const orderItems = lineItems.map((line) => ({
-      name: line.description,
+      name: line.price.product.metadata.name || line.description,
       qty: line.quantity,
       image: line.price.product.metadata.image,
+      color: line.price.product.metadata.color || undefined,
       price: line.price.unit_amount / 100,
       product: line.price.product.metadata.productId,
     }))
@@ -159,6 +161,8 @@ export const createOrderFromStripe = async (req, res) => {
         taxPrice: 0,
         shippingPrice: 0,
         totalPrice: session.amount_total / 100,
+        couponCode: session.metadata?.couponCode || undefined,
+        discountPrice: (session.total_details?.amount_discount || 0) / 100,
         isPaid: true,
         paidAt: Date.now(),
         status: 'Placed',
@@ -170,6 +174,10 @@ export const createOrderFromStripe = async (req, res) => {
         return res.json(await Order.findOne({ stripeSessionId: sessionId }))
       }
       throw err
+    }
+
+    if (order.couponCode) {
+      await recordCouponUse(order.couponCode, req.user._id)
     }
 
     await notifyOrderPlaced(order)
@@ -197,6 +205,7 @@ export const createOrderFromStripe = async (req, res) => {
 // ------------------------------------------------------------------
 export const createCodOrder = async (req, res) => {
   const reserved = []
+  let redeemed = null
 
   try {
     const { shippingAddress, error: addressError } = validateAddress(req.body.shippingAddress)
@@ -224,23 +233,43 @@ export const createCodOrder = async (req, res) => {
       reserved.push({ product: product._id, qty })
     }
 
-    const totalPrice = Math.round(items.reduce((acc, { unitPrice, qty }) => acc + unitPrice * qty, 0) * 100) / 100
+    const itemsPrice = Math.round(items.reduce((acc, { unitPrice, qty }) => acc + unitPrice * qty, 0) * 100) / 100
+
+    const { couponCode } = req.body
+    let discountPrice = 0
+
+    if (couponCode) {
+      const { coupon, discount, error: couponError } = await checkCoupon(couponCode, req.user._id, itemsPrice)
+
+      if (couponError || !(await redeemCoupon(coupon, req.user._id))) {
+        await restoreStock(reserved)
+        return res.status(400).json({ message: couponError || 'That promo code has just run out' })
+      }
+
+      redeemed = coupon.code
+      discountPrice = discount
+    }
+
+    const totalPrice = Math.round((itemsPrice - discountPrice) * 100) / 100
 
     const order = await Order.create({
       user: req.user._id,
-      orderItems: items.map(({ product, qty, unitPrice }) => ({
+      orderItems: items.map(({ product, qty, unitPrice, color, image }) => ({
         name: product.name,
         qty,
-        image: product.image,
+        image,
+        color,
         price: unitPrice,
         product: product._id,
       })),
       shippingAddress,
       paymentMethod: 'COD',
-      itemsPrice: totalPrice,
+      itemsPrice,
       taxPrice: 0,
       shippingPrice: 0,
       totalPrice,
+      couponCode: redeemed || undefined,
+      discountPrice,
       status: 'Placed',
       statusHistory: [{ status: 'Placed' }],
     })
@@ -250,6 +279,9 @@ export const createCodOrder = async (req, res) => {
     res.status(201).json(order)
   } catch (err) {
     await restoreStock(reserved).catch(() => {})
+    if (redeemed) {
+      await releaseCoupon(redeemed, req.user._id).catch(() => {})
+    }
     console.error(`COD order failed: ${err.message}`)
     res.status(500).json({ message: 'Could not place your order, please try again' })
   }
@@ -315,6 +347,9 @@ export const cancelOrder = async (req, res) => {
     order.currentLocation = undefined
     await order.save()
     await restoreStock(order.orderItems)
+    if (order.couponCode) {
+      await releaseCoupon(order.couponCode, order.user)
+    }
     await notifyCustomer(order, 'Cancelled')
     await notify(order.deliveryPartner, {
       title: 'Delivery cancelled',

@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { confirmStripeOrder } from "../store/slices/orderSlice";
 import { clearCart } from "../store/slices/cartSlice";
+import { clearPromoCode } from "../utils/promoCode";
 import Loader from "../components/Loader";
 import { usePageTitle } from "../utils/usePageTitle";
 
@@ -29,6 +30,7 @@ const PaymentSuccessScreen = () => {
 
     dispatch(confirmStripeOrder(sessionId)).then((result) => {
       if (result.meta.requestStatus === "fulfilled") {
+        clearPromoCode();
         dispatch(clearCart());
         navigate(`/order/${result.payload._id}`, { replace: true });
       } else {

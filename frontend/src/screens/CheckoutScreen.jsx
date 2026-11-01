@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Row, Col, Card, Form, Button } from "react-bootstrap";
+import { Row, Col, Card, Form, Button, InputGroup } from "react-bootstrap";
 import { Navigate, useNavigate } from "react-router-dom";
 import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -10,6 +10,8 @@ import { createCheckoutSessionThunk } from "../store/slices/paymentSlice";
 import { createCodOrder } from "../store/slices/orderSlice";
 import Message from "../components/Message";
 import { formatPrice } from "../utils/formatPrice";
+import { cartLinePayload } from "../utils/cartLine";
+import { clearPromoCode, readPromoCode, savePromoCode } from "../utils/promoCode";
 import { usePageTitle } from "../utils/usePageTitle";
 
 const EMPTY_ADDRESS = { address: "", city: "", postalCode: "", phone: "" };
@@ -24,8 +26,12 @@ const CheckoutScreen = () => {
   const [address, setAddress] = useState({ ...EMPTY_ADDRESS, ...shippingAddress });
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
+  const [promoInput, setPromoInput] = useState(readPromoCode);
+  const [promo, setPromo] = useState(null);
+  const [promoError, setPromoError] = useState("");
+  const [applying, setApplying] = useState(false);
 
-  const cartIds = cartItems.map((item) => item._id).join(",");
+  const cartIds = [...new Set(cartItems.map((item) => item._id))].join(",");
 
   usePageTitle("Checkout");
 
@@ -37,6 +43,35 @@ const CheckoutScreen = () => {
     }
   }, [dispatch, cartIds]);
 
+  const applyPromo = useCallback(async (code) => {
+    setApplying(true);
+    setPromoError("");
+    try {
+      const { data } = await api.post("/coupons/apply", { code, cartItems: cartItems.map(cartLinePayload) });
+      setPromo(data);
+      setPromoInput(data.code);
+      savePromoCode(data.code);
+    } catch (err) {
+      setPromo(null);
+      setPromoError(err.response?.data?.message || "That promo code is not valid");
+    } finally {
+      setApplying(false);
+    }
+  }, [cartItems]);
+
+  // Prices can change when the cart refreshes, so work the discount out again
+  const appliedCode = promo?.code;
+  useEffect(() => {
+    if (appliedCode) applyPromo(appliedCode);
+  }, [appliedCode, applyPromo]);
+
+  const removePromo = () => {
+    setPromo(null);
+    setPromoInput("");
+    setPromoError("");
+    clearPromoCode();
+  };
+
   useEffect(() => {
     dispatch(savePaymentMethod(method));
   }, [dispatch, method]);
@@ -46,12 +81,13 @@ const CheckoutScreen = () => {
   }
 
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
+  const itemsPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
+  const totalPrice = itemsPrice - (promo?.discount || 0);
 
   const setField = (field) => (e) => setAddress({ ...address, [field]: e.target.value });
 
   const payByCard = async () => {
-    const result = await dispatch(createCheckoutSessionThunk(cartItems));
+    const result = await dispatch(createCheckoutSessionThunk({ cartItems, couponCode: promo?.code }));
 
     if (result.meta.requestStatus === "fulfilled") {
       window.location.href = result.payload.url;
@@ -64,9 +100,10 @@ const CheckoutScreen = () => {
     setPlacing(true);
     dispatch(saveShippingAddress(address));
 
-    const result = await dispatch(createCodOrder({ cartItems, shippingAddress: address }));
+    const result = await dispatch(createCodOrder({ cartItems, shippingAddress: address, couponCode: promo?.code }));
 
     if (result.meta.requestStatus === "fulfilled") {
+      clearPromoCode();
       dispatch(clearCart());
       toast.success("Order placed");
       navigate(`/order/${result.payload._id}`, { replace: true });
@@ -175,8 +212,14 @@ const CheckoutScreen = () => {
                 <h2>Order summary</h2>
                 <div className="summary-row">
                   <span>Items ({itemCount})</span>
-                  <span>{formatPrice(totalPrice)}</span>
+                  <span>{formatPrice(itemsPrice)}</span>
                 </div>
+                {promo && (
+                  <div className="summary-row promo-saving">
+                    <span>Promo {promo.code}</span>
+                    <span>− {formatPrice(promo.discount)}</span>
+                  </div>
+                )}
                 <div className="summary-row">
                   <span>Delivery</span>
                   <span>Free</span>
@@ -184,6 +227,39 @@ const CheckoutScreen = () => {
                 <div className="summary-row summary-total">
                   <span>{method === "COD" ? "Pay on delivery" : "Total"}</span>
                   <span>{formatPrice(totalPrice)}</span>
+                </div>
+                <div className="promo-box">
+                  <Form.Label htmlFor="promoCode">Promo code</Form.Label>
+                  {promo ? (
+                    <div className="promo-applied">
+                      <span>{promo.code} applied ({promo.discountPercent}% off)</span>
+                      <Button variant="link" size="sm" onClick={removePromo}>Remove</Button>
+                    </div>
+                  ) : (
+                    <InputGroup>
+                      <Form.Control
+                        id="promoCode"
+                        className="coupon-input"
+                        autoComplete="off"
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (promoInput.trim()) applyPromo(promoInput);
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outline-primary"
+                        disabled={applying || !promoInput.trim()}
+                        onClick={() => applyPromo(promoInput)}
+                      >
+                        {applying ? "Checking..." : "Apply"}
+                      </Button>
+                    </InputGroup>
+                  )}
+                  {promoError && <Form.Text className="text-danger" role="alert">{promoError}</Form.Text>}
                 </div>
                 <div className="d-grid mt-3">
                   <Button type="submit" disabled={busy}>

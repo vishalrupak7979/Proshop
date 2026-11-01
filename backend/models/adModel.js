@@ -6,6 +6,7 @@ const adSchema = mongoose.Schema(
     text: { type: String },
     image: { type: String, required: true },
     link: { type: String },
+    couponCode: { type: String },
     startsAt: { type: Date },
     endsAt: { type: Date },
     isActive: { type: Boolean, required: true, default: true },

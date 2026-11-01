@@ -20,11 +20,31 @@ const priceCart = async (cartItems) => {
     if (!product) {
       return { error: 'An item in your cart is no longer available' }
     }
-    if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > product.countInStock) {
+
+    // Colours share one stock count, so add up every line for this product
+    const wanted = cartItems
+      .filter((line) => line._id === item._id)
+      .reduce((acc, line) => acc + line.qty, 0)
+
+    if (!Number.isInteger(item.qty) || item.qty < 1 || wanted > product.countInStock) {
       return { error: `Only ${product.countInStock} of ${product.name} left in stock` }
     }
 
-    items.push({ product, qty: item.qty, unitPrice: withOffer(product, offers).price })
+    const color = item.color
+      ? product.colors.find((c) => c.name === item.color)
+      : product.colors[0]
+
+    if (item.color && !color) {
+      return { error: `That colour of ${product.name} is no longer available` }
+    }
+
+    items.push({
+      product,
+      qty: item.qty,
+      unitPrice: withOffer(product, offers).price,
+      color: color?.name,
+      image: color?.image || product.image,
+    })
   }
 
   return { items }

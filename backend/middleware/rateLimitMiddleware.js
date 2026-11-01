@@ -8,6 +8,16 @@ const accountKey = (req) => {
   return req.params.token || ipKeyGenerator(req.ip)
 }
 
+// Stops promo codes being guessed. Runs after sign-in, so this is per customer
+export const couponLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  keyGenerator: (req) => req.user._id.toString(),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many attempts, please try again in a few minutes' },
+})
+
 // Slows down password guessing and reset email abuse
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

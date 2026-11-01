@@ -3,6 +3,10 @@ import Product from '../models/productModel.js'
 import { getLiveOffers, withOffer } from '../utils/offers.js'
 
 const MAX_PRICE = 10000000
+const MAX_GALLERY = 8
+const MAX_SPECIFICATIONS = 30
+const MAX_COLORS = 12
+const HEX_COLOR = /^#[0-9a-f]{6}$/i
 const DEFAULT_PAGE_SIZE = 12
 const MAX_PAGE_SIZE = 48
 
@@ -38,8 +42,41 @@ const readProduct = (body) => {
     return { error: 'Quantity must be 0 or more' }
   }
 
+  const images = Array.isArray(body.images)
+    ? body.images.filter((image) => typeof image === 'string' && image.trim()).slice(0, MAX_GALLERY)
+    : []
+
+  const specifications = Array.isArray(body.specifications)
+    ? body.specifications
+      .filter((spec) => typeof spec?.label === 'string' && typeof spec?.value === 'string')
+      .map((spec) => ({ label: spec.label.trim(), value: spec.value.trim() }))
+      .filter((spec) => spec.label && spec.value)
+      .slice(0, MAX_SPECIFICATIONS)
+    : []
+
+  const colorList = Array.isArray(body.colors) ? body.colors : []
+  if (colorList.length > MAX_COLORS) {
+    return { error: `Add up to ${MAX_COLORS} colours` }
+  }
+  if (colorList.some((color) => typeof color?.name !== 'string' || !color.name.trim() || !HEX_COLOR.test(color?.hex))) {
+    return { error: 'Each colour needs a name and a valid colour' }
+  }
+
+  const colors = colorList.map((color) => ({
+    name: color.name.trim(),
+    hex: color.hex,
+    image: typeof color.image === 'string' && color.image ? color.image : undefined,
+  }))
+
+  if (new Set(colors.map((color) => color.name.toLowerCase())).size !== colors.length) {
+    return { error: 'Each colour needs a different name' }
+  }
+
   return {
     fields: {
+      images,
+      specifications,
+      colors,
       name: text('name'),
       brand: text('brand'),
       category: text('category'),

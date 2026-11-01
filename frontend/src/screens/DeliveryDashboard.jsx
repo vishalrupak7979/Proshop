@@ -110,7 +110,9 @@ const DeliveryCard = ({ order, onChange }) => {
 
         <ul className="delivery-items">
           {order.orderItems.map((item) => (
-            <li key={item.product}>{item.name} × {item.qty}</li>
+            <li key={`${item.product}-${item.color}`}>
+              {item.name}{item.color && ` (${item.color})`} × {item.qty}
+            </li>
           ))}
         </ul>
 

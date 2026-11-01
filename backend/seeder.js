@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import colors from 'colors'
 import users from './data/users.js'
 import products from './data/products.js'
+import productDetails from './data/productDetails.js'
 import orders from './data/orders.js'
 import User from './models/userModel.js'
 import Product from './models/productModel.js'
@@ -63,6 +64,7 @@ const importData = async () => {
       const total = p.reviews.reduce((acc, r) => acc + r.rating, 0)
       return {
         ...p,
+        ...productDetails[p.name],
         user: adminUser,
         numReviews: p.reviews.length,
         rating: Math.round((total / p.reviews.length) * 10) / 10,

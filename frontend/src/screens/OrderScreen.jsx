@@ -50,12 +50,13 @@ const OrderScreen = () => {
       <Row className="g-4">
         <Col lg={8}>
           {order.orderItems.map((item) => (
-            <div key={item.product} className="cart-item">
+            <div key={`${item.product}-${item.color}`} className="cart-item">
               <Link to={`/product/${item.product}`} className="cart-item-img">
                 <Image src={imageUrl(item.image)} alt={item.name} fluid />
               </Link>
               <div className="cart-item-info">
                 <Link to={`/product/${item.product}`} className="product-title">{item.name}</Link>
+                {item.color && <div className="table-muted">{item.color}</div>}
                 <div>{item.qty} × {formatPrice(item.price)}</div>
               </div>
               <strong>{formatPrice(item.qty * item.price)}</strong>
@@ -77,6 +78,18 @@ const OrderScreen = () => {
                 <span>Payment</span>
                 <span>{paymentLabel(order)}</span>
               </div>
+              {order.discountPrice > 0 && (
+                <>
+                  <div className="summary-row">
+                    <span>Items</span>
+                    <span>{formatPrice(order.itemsPrice)}</span>
+                  </div>
+                  <div className="summary-row promo-saving">
+                    <span>Promo {order.couponCode}</span>
+                    <span>− {formatPrice(order.discountPrice)}</span>
+                  </div>
+                </>
+              )}
               <div className="summary-row summary-total">
                 <span>Total</span>
                 <span>{formatPrice(order.totalPrice)}</span>

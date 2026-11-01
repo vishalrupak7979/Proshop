@@ -7,6 +7,7 @@ import api from "../api/axios";
 import { removeFromCart, addToCart, refreshCartItems } from "../store/slices/cartSlice";
 import { formatPrice } from "../utils/formatPrice";
 import { imageUrl } from "../utils/imageUrl";
+import { lineKey } from "../utils/cartLine";
 import { qtyOptions } from "../utils/quantity";
 import { usePageTitle } from "../utils/usePageTitle";
 
@@ -16,7 +17,7 @@ const CartScreen = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const { userInfo } = useSelector((state) => state.user);
 
-  const cartIds = cartItems.map((item) => item._id).join(",");
+  const cartIds = [...new Set(cartItems.map((item) => item._id))].join(",");
 
   usePageTitle("Cart");
 
@@ -60,12 +61,13 @@ const CartScreen = () => {
       <Row className="g-4">
         <Col lg={8}>
           {cartItems.map((item) => (
-            <div key={item._id} className="cart-item">
+            <div key={lineKey(item)} className="cart-item">
               <Link to={`/product/${item._id}`} className="cart-item-img">
                 <Image src={imageUrl(item.image)} alt={item.name} fluid />
               </Link>
               <div className="cart-item-info">
                 <Link to={`/product/${item._id}`} className="product-title">{item.name}</Link>
+                {item.color && <div className="table-muted">{item.color}</div>}
                 <div>{formatPrice(item.price)}</div>
               </div>
               <Form.Select
@@ -82,7 +84,7 @@ const CartScreen = () => {
                 type="button"
                 variant="light"
                 aria-label={`Remove ${item.name}`}
-                onClick={() => removeFromCartHandler(item._id)}
+                onClick={() => removeFromCartHandler(lineKey(item))}
               >
                 <FaTrash aria-hidden="true" />
               </Button>

@@ -9,12 +9,13 @@ import { imageUrl } from '../utils/imageUrl'
 import { SAMPLE_BANNERS } from '../utils/sampleBanners'
 import { usePageTitle } from '../utils/usePageTitle'
 
-const EMPTY_AD = { title: '', text: '', image: '', link: '', startsAt: '', endsAt: '' }
+const EMPTY_AD = { title: '', text: '', image: '', link: '', couponCode: '', startsAt: '', endsAt: '' }
 
 const toIso = (value) => (value ? new Date(value).toISOString() : undefined)
 
 const AdminAdList = () => {
   const [ads, setAds] = useState([])
+  const [coupons, setCoupons] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [form, setForm] = useState(EMPTY_AD)
@@ -24,8 +25,11 @@ const AdminAdList = () => {
   usePageTitle('Advertisements')
 
   useEffect(() => {
-    axios.get('/ads/all')
-      .then(({ data }) => setAds(data))
+    Promise.all([axios.get('/ads/all'), axios.get('/coupons')])
+      .then(([adList, couponList]) => {
+        setAds(adList.data)
+        setCoupons(couponList.data)
+      })
       .catch((err) => setError(err.response?.data?.message || 'Failed to load advertisements'))
       .finally(() => setLoading(false))
   }, [])
@@ -130,6 +134,7 @@ const AdminAdList = () => {
                         <span>
                           {ad.title}
                           {ad.link && <div className="table-muted">{ad.link}</div>}
+                          {ad.couponCode && <div><code className="coupon-code">{ad.couponCode}</code></div>}
                         </span>
                       </div>
                     </td>
@@ -168,6 +173,18 @@ const AdminAdList = () => {
                 <Form.Group controlId="link" className="mb-3">
                   <Form.Label>Link (optional)</Form.Label>
                   <Form.Control placeholder="/product/... or https://..." value={form.link} onChange={setField('link')} />
+                </Form.Group>
+                <Form.Group controlId="couponCode" className="mb-3">
+                  <Form.Label>Promo code (optional)</Form.Label>
+                  <Form.Select value={form.couponCode} onChange={setField('couponCode')}>
+                    <option value="">None</option>
+                    {coupons.map((coupon) => (
+                      <option key={coupon._id} value={coupon.code}>
+                        {coupon.code} ({coupon.discountPercent}% off)
+                      </option>
+                    ))}
+                  </Form.Select>
+                  {coupons.length === 0 && <Form.Text>Create one under Promo codes first.</Form.Text>}
                 </Form.Group>
                 <Form.Group controlId="startsAt" className="mb-3">
                   <Form.Label>Starts (optional)</Form.Label>

@@ -23,6 +23,7 @@ import AdminOrderList from './screens/AdminOrderList'
 import AdminPartnerList from './screens/AdminPartnerList'
 import AdminProductList from './screens/AdminProductList'
 import AdminOfferList from './screens/AdminOfferList'
+import AdminCouponList from './screens/AdminCouponList'
 import AdminAdList from './screens/AdminAdList'
 import AdminBroadcast from './screens/AdminBroadcast'
 import CheckoutScreen from './screens/CheckoutScreen'
@@ -90,6 +91,7 @@ function App() {
               <Route path="orders" element={<AdminOrderList />} />
               <Route path="products" element={<AdminProductList />} />
               <Route path="offers" element={<AdminOfferList />} />
+              <Route path="coupons" element={<AdminCouponList />} />
               <Route path="ads" element={<AdminAdList />} />
               <Route path="delivery-partners" element={<AdminPartnerList />} />
               <Route path="notifications" element={<AdminBroadcast />} />
