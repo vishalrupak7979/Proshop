@@ -1,10 +1,12 @@
 import { Card, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { FaBalanceScale } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import PriceTag from "./PriceTag";
 import Rating from "./Rating";
 import { addToCart } from "../store/slices/cartSlice";
+import { addToCompare, MAX_COMPARE, removeFromCompare } from "../store/slices/compareSlice";
 import { imageUrl } from "../utils/imageUrl";
 import { maxQty } from "../utils/quantity";
 
@@ -14,8 +16,21 @@ const ProductCard = ({ product }) => {
     state.cart.cartItems.find((item) => item._id === product._id)
   );
 
+  const compareIds = useSelector((state) => state.compare.ids);
+  const comparing = compareIds.includes(product._id);
+
   const outOfStock = product.countInStock === 0;
   const lowStock = !outOfStock && product.countInStock <= 3;
+
+  const toggleCompare = () => {
+    if (comparing) {
+      dispatch(removeFromCompare(product._id));
+    } else if (compareIds.length >= MAX_COMPARE) {
+      toast.info(`You can compare up to ${MAX_COMPARE} products`, { toastId: "compare-limit" });
+    } else {
+      dispatch(addToCompare(product._id));
+    }
+  };
 
   const addToCartHandler = () => {
     const qty = Math.min((inCart?.qty || 0) + 1, maxQty(product.countInStock));
@@ -55,6 +70,17 @@ const ProductCard = ({ product }) => {
           {outOfStock ? "Unavailable" : "Add to cart"}
         </Button>
       </Card.Body>
+
+      <button
+        type="button"
+        className={comparing ? "compare-toggle is-active" : "compare-toggle"}
+        aria-pressed={comparing}
+        aria-label={`Compare ${product.name}`}
+        title="Compare"
+        onClick={toggleCompare}
+      >
+        <FaBalanceScale aria-hidden="true" />
+      </button>
     </Card>
   );
 };

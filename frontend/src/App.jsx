@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { Container } from 'react-bootstrap'
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminLayout from './components/AdminLayout'
+import CompareBar from './components/CompareBar'
 import ErrorBoundary from './components/ErrorBoundary'
 import HomeScreen from './screens/HomeScreen'
 import ProductScreen from './screens/ProductScreen'
@@ -24,6 +26,8 @@ import AdminOfferList from './screens/AdminOfferList'
 import AdminAdList from './screens/AdminAdList'
 import AdminBroadcast from './screens/AdminBroadcast'
 import CheckoutScreen from './screens/CheckoutScreen'
+import CompareScreen from './screens/CompareScreen'
+import CalculatorScreen from './screens/CalculatorScreen'
 import DeliveryDashboard from './screens/DeliveryDashboard'
 
 const NotFound = () => (
@@ -34,9 +38,18 @@ const NotFound = () => (
   </div>
 )
 
+// Everything except the admin area sits in the centred page width
+const StoreLayout = () => (
+  <Container>
+    <Outlet />
+    <CompareBar />
+  </Container>
+)
+
 function App() {
   const { pathname } = useLocation()
   const theme = useSelector((state) => state.theme.mode)
+  const isAdminArea = pathname.startsWith('/admin')
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -51,13 +64,15 @@ function App() {
       <a href="#main" className="skip-link">Skip to content</a>
       <Header />
 
-      <main id="main" className="main-content">
-        <Container>
-          <ErrorBoundary>
-            <Routes>
+      <main id="main" className={isAdminArea ? 'main-content is-admin' : 'main-content'}>
+        <ErrorBoundary>
+          <Routes>
+            <Route element={<StoreLayout />}>
               <Route path="/" element={<HomeScreen />} />
               <Route path="/product/:id" element={<ProductScreen />} />
               <Route path="/cart" element={<CartScreen />} />
+              <Route path="/compare" element={<CompareScreen />} />
+              <Route path="/calculator" element={<CalculatorScreen />} />
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/register" element={<RegisterScreen />} />
               <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
@@ -66,17 +81,22 @@ function App() {
               <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
               <Route path="/order/:id" element={<ProtectedRoute><OrderScreen /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><CheckoutScreen /></ProtectedRoute>} />
-              <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminOrderList /></ProtectedRoute>} />
-              <Route path="/admin/delivery-partners" element={<ProtectedRoute adminOnly><AdminPartnerList /></ProtectedRoute>} />
-              <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminProductList /></ProtectedRoute>} />
-              <Route path="/admin/offers" element={<ProtectedRoute adminOnly><AdminOfferList /></ProtectedRoute>} />
-              <Route path="/admin/ads" element={<ProtectedRoute adminOnly><AdminAdList /></ProtectedRoute>} />
-              <Route path="/admin/notifications" element={<ProtectedRoute adminOnly><AdminBroadcast /></ProtectedRoute>} />
               <Route path="/delivery" element={<ProtectedRoute partnerOnly><DeliveryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ErrorBoundary>
-        </Container>
+            </Route>
+
+            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="orders" replace />} />
+              <Route path="orders" element={<AdminOrderList />} />
+              <Route path="products" element={<AdminProductList />} />
+              <Route path="offers" element={<AdminOfferList />} />
+              <Route path="ads" element={<AdminAdList />} />
+              <Route path="delivery-partners" element={<AdminPartnerList />} />
+              <Route path="notifications" element={<AdminBroadcast />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </ErrorBoundary>
       </main>
 
       <Footer />

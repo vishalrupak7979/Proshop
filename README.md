@@ -34,12 +34,17 @@ Password reset emails need a [Brevo](https://www.brevo.com) API key, with `EMAIL
 
 ## Running the store
 
-The **Admin** menu has everything an admin needs:
+The admin area has a left sidebar that collapses to icons, with everything an admin needs:
 
 - **Products:** add, edit or delete products. Images are stored in MongoDB, because Render's disk is wiped on each deploy.
 - **Festival offers:** percentage discounts on all products, categories or specific products, between two dates. The server applies them at checkout, and the biggest offer wins.
 - **Advertisements:** banners on the home page, replacing the welcome banner while any are showing. Pick a ready-made sample banner or upload your own; wide images work best.
 - **Send notification:** in-app messages to customers, partners or everyone. Order updates are sent automatically.
+
+## Shopper tools
+
+- **Compare:** up to 4 of the store's products side by side, using the compare button on each product or the search on the Compare page.
+- **Price calculator:** add products and quantities to see the total and savings with live offers, then add everything to the cart.
 
 ## Testing payments
 

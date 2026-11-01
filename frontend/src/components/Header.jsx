@@ -8,15 +8,6 @@ import { logout } from '../store/slices/userSlice'
 import NotificationBell from './NotificationBell'
 import ThemeToggle from './ThemeToggle'
 
-const ADMIN_LINKS = [
-  { to: '/admin/orders', label: 'Orders' },
-  { to: '/admin/products', label: 'Products' },
-  { to: '/admin/offers', label: 'Festival offers' },
-  { to: '/admin/ads', label: 'Advertisements' },
-  { to: '/admin/delivery-partners', label: 'Delivery partners' },
-  { to: '/admin/notifications', label: 'Send notification' },
-]
-
 const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -65,6 +56,14 @@ const Header = () => {
                   <Nav.Link>Shop</Nav.Link>
                 </LinkContainer>
 
+                <LinkContainer to="/compare">
+                  <Nav.Link>Compare</Nav.Link>
+                </LinkContainer>
+
+                <LinkContainer to="/calculator">
+                  <Nav.Link>Price calculator</Nav.Link>
+                </LinkContainer>
+
                 <LinkContainer to="/cart">
                   <Nav.Link>
                     <FaShoppingCart aria-hidden="true" /> Cart
@@ -79,13 +78,9 @@ const Header = () => {
                 )}
 
                 {userInfo?.isAdmin && (
-                  <NavDropdown title="Admin" id="admin-menu" align="end">
-                    {ADMIN_LINKS.map(({ to, label }) => (
-                      <LinkContainer key={to} to={to}>
-                        <NavDropdown.Item>{label}</NavDropdown.Item>
-                      </LinkContainer>
-                    ))}
-                  </NavDropdown>
+                  <LinkContainer to="/admin/orders">
+                    <Nav.Link>Admin</Nav.Link>
+                  </LinkContainer>
                 )}
 
                 {userInfo ? (
