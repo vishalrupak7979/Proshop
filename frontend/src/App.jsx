@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import CompareBar from './components/CompareBar'
 import ErrorBoundary from './components/ErrorBoundary'
+import Logo from './components/Logo'
 import HomeScreen from './screens/HomeScreen'
 import ProductScreen from './screens/ProductScreen'
 import CartScreen from './screens/CartScreen'
@@ -33,6 +34,7 @@ import DeliveryDashboard from './screens/DeliveryDashboard'
 
 const NotFound = () => (
   <div className="empty-state">
+    <Logo size={56} className="empty-logo" />
     <h1>Page not found</h1>
     <p>The page you are looking for doesn&apos;t exist.</p>
     <Link to="/" className="btn btn-primary">Back to shop</Link>

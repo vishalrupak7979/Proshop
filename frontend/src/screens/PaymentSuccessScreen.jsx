@@ -53,7 +53,7 @@ const PaymentSuccessScreen = () => {
     <div className="empty-state">
       <h1>Confirming your order</h1>
       <p>Please keep this page open.</p>
-      <Loader />
+      <Loader inline />
     </div>
   );
 };

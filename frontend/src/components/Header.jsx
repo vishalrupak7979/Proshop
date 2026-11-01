@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FaShoppingCart, FaUser } from 'react-icons/fa'
 import { logout } from '../store/slices/userSlice'
+import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import ThemeToggle from './ThemeToggle'
 
@@ -33,7 +34,10 @@ const Header = () => {
       <Navbar expand="lg" expanded={menuOpen} onToggle={setMenuOpen}>
         <Container>
           <LinkContainer to="/">
-            <Navbar.Brand>ProShop</Navbar.Brand>
+            <Navbar.Brand className="brand">
+              <Logo size={30} />
+              <span>ProShop</span>
+            </Navbar.Brand>
           </LinkContainer>
 
           <div className="header-actions">

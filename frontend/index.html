@@ -15,12 +15,170 @@
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>ProShop</title>
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta property="og:title" content="ProShop" />
+    <meta property="og:description" content="Phones, laptops, tablets and audio gear, delivered across India." />
+    <meta property="og:type" content="website" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Inline so the first paint has no white flash, and shared with Loader.jsx */
+      html { background: #f6f7f9; }
+      html[data-bs-theme='dark'] { background: #0e1116; }
+
+      .app-loader {
+        --loader-text: #475467;
+        --loader-track: #e4e7ec;
+        --loader-bg: #f6f7f9;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        padding: 16px;
+        text-align: center;
+        background: var(--loader-bg);
+        animation: app-loader-in 0.25s ease 0.15s both;
+      }
+
+      html[data-bs-theme='dark'] .app-loader {
+        --loader-text: #b9c2d0;
+        --loader-track: #2a303b;
+        --loader-bg: #0e1116;
+      }
+
+      .app-loader.is-inline {
+        position: static;
+        background: none;
+        animation-delay: 0s;
+      }
+
+      .app-loader-mark {
+        width: 96px;
+        height: 96px;
+        overflow: visible;
+      }
+
+      .app-loader-track,
+      .app-loader-ring {
+        fill: none;
+        stroke-width: 5;
+      }
+
+      .app-loader-track {
+        stroke: var(--loader-track);
+      }
+
+      .app-loader-ring {
+        stroke-dasharray: 100 189;
+        stroke-linecap: round;
+        transform-origin: 50px 50px;
+        animation: app-loader-spin 1.1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+      }
+
+      .app-loader-bag {
+        transform-origin: 50px 74px;
+        animation: app-loader-bounce 1.1s ease-in-out infinite;
+      }
+
+      .app-loader-handle {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        transform-origin: 50px 43px;
+        animation: app-loader-swing 1.1s ease-in-out infinite;
+      }
+
+      .app-loader-text {
+        color: var(--loader-text);
+        font: 500 0.9375rem/1.4 Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        max-width: 280px;
+      }
+
+      .app-loader-dots i {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        margin-left: 3px;
+        vertical-align: 2px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: app-loader-dot 1.1s ease-in-out infinite;
+      }
+
+      .app-loader-dots i:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .app-loader-dots i:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes app-loader-in {
+        from { opacity: 0; transform: scale(0.94); }
+      }
+
+      @keyframes app-loader-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes app-loader-bounce {
+        0%, 100% { transform: translateY(0) scale(1.03, 0.96); }
+        50% { transform: translateY(-7px) scale(0.98, 1.03); }
+      }
+
+      @keyframes app-loader-swing {
+        0%, 100% { transform: rotate(-9deg); }
+        50% { transform: rotate(9deg); }
+      }
+
+      @keyframes app-loader-dot {
+        0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-3px); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .app-loader,
+        .app-loader-bag,
+        .app-loader-handle,
+        .app-loader-dots i {
+          animation: none;
+        }
+
+        .app-loader-ring {
+          animation-duration: 3s;
+          animation-timing-function: linear;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="app-loader" role="status">
+        <svg class="app-loader-mark" viewBox="0 0 100 100" aria-hidden="true">
+          <defs>
+            <linearGradient id="app-loader-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#2563eb" />
+              <stop offset="1" stop-color="#7c3aed" />
+            </linearGradient>
+          </defs>
+          <circle class="app-loader-track" cx="50" cy="50" r="46" />
+          <circle class="app-loader-ring" cx="50" cy="50" r="46" stroke="url(#app-loader-gradient)" />
+          <g class="app-loader-bag">
+            <path class="app-loader-handle" d="M40 43v-5a10 10 0 0 1 20 0v5" stroke="url(#app-loader-gradient)" />
+            <path d="M34 42h32a3 3 0 0 1 3 2.7l2.5 25A4 4 0 0 1 67.5 74h-35a4 4 0 0 1-4-4.3l2.5-25A3 3 0 0 1 34 42Z" fill="url(#app-loader-gradient)" />
+            <path fill="#fff" fill-rule="evenodd" d="M44 49h8a6.5 6.5 0 0 1 0 13h-3v6h-5Zm5 4.5v4h2.5a2 2 0 0 0 0-4Z" />
+          </g>
+        </svg>
+        <span class="app-loader-text">Loading<span class="app-loader-dots"><i></i><i></i><i></i></span></span>
+      </div>
+    </div>
+    <noscript>ProShop needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import AdCarousel from '../components/AdCarousel'
 import Paginator from '../components/Paginator'
 import ProductCard from '../components/ProductCard'
-import ProductSkeleton from '../components/ProductSkeleton'
+import Loader from '../components/Loader'
 import Message from '../components/Message'
 import { fetchProducts } from '../store/slices/productSlice'
 import { usePageTitle } from '../utils/usePageTitle'
@@ -121,16 +121,7 @@ const HomeScreen = () => {
       </div>
 
       {firstLoad ? (
-        <>
-          {slowLoad && <p className="slow-note">The store is waking up. This can take up to a minute.</p>}
-          <Row className="g-4">
-            {[...Array(8).keys()].map((x) => (
-              <Col key={x} xs={6} md={4} xl={3}>
-                <ProductSkeleton />
-              </Col>
-            ))}
-          </Row>
-        </>
+        <Loader message={slowLoad ? 'The store is waking up. This can take up to a minute.' : undefined} />
       ) : error ? (
         <Message variant="danger">{error}</Message>
       ) : total === 0 ? (
