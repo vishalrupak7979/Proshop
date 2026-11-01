@@ -3,11 +3,14 @@ import { Button, Col, Form, Image, Modal, Row, Table } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 import axios from '../api/axios'
 import ImagePicker from '../components/ImagePicker'
+import Paginator from '../components/Paginator'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
 import { formatPrice } from '../utils/formatPrice'
 import { imageUrl } from '../utils/imageUrl'
 import { usePageTitle } from '../utils/usePageTitle'
+
+const PAGE_SIZE = 12
 
 const EMPTY_PRODUCT = { name: '', brand: '', category: '', description: '', image: '', price: '', countInStock: '' }
 
@@ -17,6 +20,8 @@ const AdminProductList = () => {
   const [error, setError] = useState('')
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   usePageTitle('Products')
 
@@ -71,6 +76,11 @@ const AdminProductList = () => {
   if (error) return <Message variant="danger">{error}</Message>
 
   const categories = [...new Set(products.map((p) => p.category))]
+  const term = search.trim().toLowerCase()
+  const matches = products.filter((p) => `${p.name} ${p.brand} ${p.category}`.toLowerCase().includes(term))
+  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pages)
+  const pageItems = matches.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <>
@@ -78,6 +88,18 @@ const AdminProductList = () => {
         <h1 className="page-title">Products</h1>
         <Button onClick={() => setForm(EMPTY_PRODUCT)}>Add product</Button>
       </div>
+
+      <Form.Control
+        type="search"
+        className="admin-search"
+        placeholder="Search products"
+        aria-label="Search products"
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value)
+          setPage(1)
+        }}
+      />
 
       <Table responsive hover className="data-table">
         <thead>
@@ -90,7 +112,7 @@ const AdminProductList = () => {
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          {pageItems.map((product) => (
             <tr key={product._id}>
               <td>
                 <div className="table-product">
@@ -114,6 +136,8 @@ const AdminProductList = () => {
           ))}
         </tbody>
       </Table>
+
+      <Paginator page={currentPage} pages={pages} onChange={setPage} />
 
       <Modal show={Boolean(form)} onHide={() => setForm(null)} centered scrollable>
         {form && (

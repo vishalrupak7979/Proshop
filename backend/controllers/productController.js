@@ -3,6 +3,22 @@ import Product from '../models/productModel.js'
 import { getLiveOffers, withOffer } from '../utils/offers.js'
 
 const MAX_PRICE = 10000000
+const DEFAULT_PAGE_SIZE = 12
+const MAX_PAGE_SIZE = 48
+
+const SORTERS = {
+  'price-asc': (a, b) => a.price - b.price,
+  'price-desc': (a, b) => b.price - a.price,
+  rating: (a, b) => b.rating - a.rating,
+  discount: (a, b) => (b.discountPercent || 0) - (a.discountPercent || 0),
+}
+
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const positiveInt = (value, fallback) => {
+  const number = Number(value)
+  return Number.isInteger(number) && number > 0 ? number : fallback
+}
 
 const readProduct = (body) => {
   const text = (key) => (typeof body[key] === 'string' ? body[key].trim() : '')
@@ -38,10 +54,55 @@ const readProduct = (body) => {
 const findProduct = async (id) =>
   mongoose.isValidObjectId(id) ? Product.findById(id) : null
 
+// One page of the shop, or just the given ids for the cart
 export const getProducts = async (req, res) => {
   try {
-    const [products, offers] = await Promise.all([Product.find({}).sort({ createdAt: 1 }), getLiveOffers()])
-    res.json(products.map((product) => withOffer(product, offers)))
+    const { ids, search, category, sort } = req.query
+    const offers = await getLiveOffers()
+
+    if (typeof ids === 'string') {
+      const valid = ids.split(',').filter((id) => mongoose.isValidObjectId(id))
+      const products = await Product.find({ _id: { $in: valid } }).select('-reviews')
+      return res.json(products.map((product) => withOffer(product, offers)))
+    }
+
+    if (req.query.page === undefined) {
+      const products = await Product.find({}).sort({ createdAt: 1, _id: 1 }).select('-reviews')
+      return res.json(products.map((product) => withOffer(product, offers)))
+    }
+
+    const filter = {}
+    if (typeof category === 'string' && category) {
+      filter.category = category
+    }
+    if (typeof search === 'string' && search.trim()) {
+      const term = new RegExp(escapeRegex(search.trim()), 'i')
+      filter.$or = [{ name: term }, { brand: term }]
+    }
+
+    const limit = Math.min(positiveInt(req.query.limit, DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE)
+    const [matches, categories] = await Promise.all([
+      Product.find(filter).sort({ createdAt: 1, _id: 1 }).select('-reviews'),
+      Product.distinct('category'),
+    ])
+
+    // Sorted after offers are applied, so price order matches what customers see
+    const priced = matches.map((product) => withOffer(product, offers))
+    if (SORTERS[sort]) {
+      priced.sort(SORTERS[sort])
+    }
+
+    const pages = Math.max(1, Math.ceil(priced.length / limit))
+    const page = Math.min(positiveInt(req.query.page, 1), pages)
+
+    res.json({
+      products: priced.slice((page - 1) * limit, page * limit),
+      page,
+      pages,
+      total: priced.length,
+      limit,
+      categories: categories.sort(),
+    })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

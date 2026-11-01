@@ -25,11 +25,17 @@ const CheckoutScreen = () => {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
 
+  const cartIds = cartItems.map((item) => item._id).join(",");
+
   usePageTitle("Checkout");
 
   useEffect(() => {
-    api.get("/products").then(({ data }) => dispatch(refreshCartItems(data))).catch(() => {});
-  }, [dispatch]);
+    if (cartIds) {
+      api.get("/products", { params: { ids: cartIds } })
+        .then(({ data }) => dispatch(refreshCartItems(data)))
+        .catch(() => {});
+    }
+  }, [dispatch, cartIds]);
 
   useEffect(() => {
     dispatch(savePaymentMethod(method));

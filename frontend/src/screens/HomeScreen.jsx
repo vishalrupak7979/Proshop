@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
+import { useSearchParams } from 'react-router-dom'
 import AdCarousel from '../components/AdCarousel'
+import Paginator from '../components/Paginator'
 import ProductCard from '../components/ProductCard'
 import ProductSkeleton from '../components/ProductSkeleton'
 import Message from '../components/Message'
@@ -9,28 +11,28 @@ import { fetchProducts } from '../store/slices/productSlice'
 import { usePageTitle } from '../utils/usePageTitle'
 
 const SLOW_LOAD_MS = 5000
-
-const SORTERS = {
-  featured: () => 0,
-  'price-asc': (a, b) => a.price - b.price,
-  'price-desc': (a, b) => b.price - a.price,
-  rating: (a, b) => b.rating - a.rating,
-  discount: (a, b) => (b.discountPercent || 0) - (a.discountPercent || 0),
-}
+const SEARCH_DELAY_MS = 300
 
 const HomeScreen = () => {
   const dispatch = useDispatch()
-  const { products, loading, error } = useSelector((state) => state.products)
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('All')
-  const [sort, setSort] = useState('featured')
+  const { products, page, pages, total, limit, categories, loading, error } = useSelector((state) => state.products)
   const [slowLoad, setSlowLoad] = useState(false)
+  const resultsRef = useRef(null)
+
+  // Filters live in the URL, so Back returns to the same page of results
+  const [params, setParams] = useSearchParams()
+  const pageParam = params.get('page') || '1'
+  const search = params.get('search') || ''
+  const category = params.get('category') || ''
+  const sort = params.get('sort') || ''
+  const [searchText, setSearchText] = useState(search)
 
   usePageTitle()
 
   useEffect(() => {
-    dispatch(fetchProducts())
-  }, [dispatch])
+    const request = dispatch(fetchProducts({ page: pageParam, search, category, sort }))
+    return () => request.abort()
+  }, [dispatch, pageParam, search, category, sort])
 
   // Render's free tier sleeps, and the first request can take close to a minute
   useEffect(() => {
@@ -38,23 +40,43 @@ const HomeScreen = () => {
     return () => clearTimeout(timer)
   }, [])
 
-  const categories = useMemo(
-    () => ['All', ...new Set(products.map((p) => p.category))],
-    [products]
-  )
+  const updateParams = (changes) => {
+    setParams((current) => {
+      const next = new URLSearchParams(current)
+      next.delete('page')
+      Object.entries(changes).forEach(([key, value]) => {
+        if (value) next.set(key, value)
+        else next.delete(key)
+      })
+      return next
+    })
+  }
 
-  const visibleProducts = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    return products
-      .filter((p) => category === 'All' || p.category === category)
-      .filter((p) => `${p.name} ${p.brand}`.toLowerCase().includes(term))
-      .sort(SORTERS[sort])
-  }, [products, search, category, sort])
+  // Keeps the box in step when Back or a link changes the search
+  useEffect(() => {
+    setSearchText(search)
+  }, [search])
+
+  useEffect(() => {
+    if (searchText === search) return undefined
+    const timer = setTimeout(() => updateParams({ search: searchText.trim() }), SEARCH_DELAY_MS)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText])
+
+  const changePage = (next) => {
+    updateParams({ page: next > 1 ? String(next) : '' })
+    resultsRef.current?.scrollIntoView({ block: 'start' })
+  }
 
   const clearFilters = () => {
-    setSearch('')
-    setCategory('All')
+    setSearchText('')
+    setParams({})
   }
+
+  const firstLoad = loading && products.length === 0 && total === 0
+  const firstItem = (page - 1) * limit + 1
+  const lastItem = Math.min(page * limit, total)
 
   return (
     <>
@@ -67,16 +89,16 @@ const HomeScreen = () => {
         )}
       />
 
-      <div className="toolbar">
+      <div className="toolbar" ref={resultsRef}>
         <Form.Control
           type="search"
           placeholder="Search products or brands"
           aria-label="Search products"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
-        <Form.Select aria-label="Sort products" value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="featured">Featured</option>
+        <Form.Select aria-label="Sort products" value={sort} onChange={(e) => updateParams({ sort: e.target.value })}>
+          <option value="">Featured</option>
           <option value="price-asc">Price: low to high</option>
           <option value="price-desc">Price: high to low</option>
           <option value="rating">Top rated</option>
@@ -85,20 +107,20 @@ const HomeScreen = () => {
       </div>
 
       <div className="category-pills">
-        {categories.map((c) => (
+        {['', ...categories].map((c) => (
           <Button
-            key={c}
+            key={c || 'all'}
             size="sm"
             variant={c === category ? 'primary' : 'outline-secondary'}
             aria-pressed={c === category}
-            onClick={() => setCategory(c)}
+            onClick={() => updateParams({ category: c })}
           >
-            {c}
+            {c || 'All'}
           </Button>
         ))}
       </div>
 
-      {loading && products.length === 0 ? (
+      {firstLoad ? (
         <>
           {slowLoad && <p className="slow-note">The store is waking up. This can take up to a minute.</p>}
           <Row className="g-4">
@@ -111,20 +133,24 @@ const HomeScreen = () => {
         </>
       ) : error ? (
         <Message variant="danger">{error}</Message>
-      ) : visibleProducts.length === 0 ? (
+      ) : total === 0 ? (
         <div className="empty-state">
           <h2>No products found</h2>
           <p>Try a different search or category.</p>
           <Button variant="outline-secondary" onClick={clearFilters}>Clear filters</Button>
         </div>
       ) : (
-        <Row className="g-4">
-          {visibleProducts.map((product) => (
-            <Col key={product._id} xs={6} md={4} xl={3}>
-              <ProductCard product={product} />
-            </Col>
-          ))}
-        </Row>
+        <div className={loading ? 'product-results is-refreshing' : 'product-results'}>
+          <p className="result-count" aria-live="polite">Showing {firstItem}–{lastItem} of {total} products</p>
+          <Row className="g-4">
+            {products.map((product) => (
+              <Col key={product._id} xs={6} md={4} xl={3}>
+                <ProductCard product={product} />
+              </Col>
+            ))}
+          </Row>
+          <Paginator page={page} pages={pages} onChange={changePage} />
+        </div>
       )}
     </>
   )

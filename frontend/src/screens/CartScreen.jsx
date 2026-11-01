@@ -16,11 +16,17 @@ const CartScreen = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const { userInfo } = useSelector((state) => state.user);
 
+  const cartIds = cartItems.map((item) => item._id).join(",");
+
   usePageTitle("Cart");
 
   useEffect(() => {
-    api.get("/products").then(({ data }) => dispatch(refreshCartItems(data))).catch(() => {});
-  }, [dispatch]);
+    if (cartIds) {
+      api.get("/products", { params: { ids: cartIds } })
+        .then(({ data }) => dispatch(refreshCartItems(data)))
+        .catch(() => {});
+    }
+  }, [dispatch, cartIds]);
 
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const totalPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
